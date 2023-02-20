@@ -35,18 +35,11 @@ Java_cn_vecrates_ffmpeg_ffplayer_FFPlayer_nativePrepare(JNIEnv *env, jobject ins
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_cn_vecrates_ffmpeg_ffplayer_FFPlayer_nativeSetSurface(JNIEnv *env, jobject instance,
-                                                           jlong obj,
-                                                           jobject jSurface,
-                                                           jint width,
-                                                           jint height) {
+Java_cn_vecrates_ffmpeg_ffplayer_FFPlayer_nativeSetListener(JNIEnv *env, jobject instance,
+                                                            jlong obj,
+                                                            jobject jListener) {
     auto *ffPlayer = (FFPlayer *) obj;
-    if (jSurface == nullptr) {
-        ffPlayer->setNativeWindow(nullptr, 0, 0);
-        return;
-    }
-    ANativeWindow *nativeWindow = ANativeWindow_fromSurface(env, jSurface);
-    ffPlayer->setNativeWindow(nativeWindow, width, height);
+    ffPlayer->setJNIListenContext(env, jListener);
 }
 
 extern "C"

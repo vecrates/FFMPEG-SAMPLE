@@ -30,7 +30,7 @@ FFPlayer::~FFPlayer() {
     delete locker; //fixme 线程安全？
 }
 
-bool FFPlayer::prepare(const std::string &file) {
+bool FFPlayer::prepare(JNIEnv *env, const std::string &file) {
 
     LOGE("prepare:");
 
@@ -38,6 +38,8 @@ bool FFPlayer::prepare(const std::string &file) {
         LOGE("prepare: illegal state %d", mState);
         return false;
     }
+
+    env->GetJavaVM(&mJvm);
 
     mAvFormatContext = avformat_alloc_context();
 
@@ -92,29 +94,6 @@ bool FFPlayer::prepare(const std::string &file) {
     updatePlayerState(STATE::PREPARED);
 
     return false;
-}
-
-void FFPlayer::setNativeWindow(ANativeWindow *nativeWindow, int width, int height) {
-    if (mState == STATE::IDLE) {
-        LOGE("setNativeWindow: illegal state %d", mState);
-        return;
-    }
-    if (mVideoDecoder == nullptr) {
-        LOGE("setNativeWindow: illegal state, decoder is null");
-        return;
-    }
-    releaseNativeWindow();
-    this->mNativeWindow = nativeWindow;
-    ANativeWindow_setBuffersGeometry(mNativeWindow, width, height, WINDOW_FORMAT_RGBA_8888);
-    mVideoDecoder->updateSws(width, height);
-}
-
-void FFPlayer::releaseNativeWindow() {
-    ANativeWindow *lastNativeWindow = this->mNativeWindow;
-    this->mNativeWindow = nullptr;
-    if (lastNativeWindow != nullptr) {
-        ANativeWindow_release(lastNativeWindow);
-    }
 }
 
 bool FFPlayer::reset() {
@@ -173,12 +152,18 @@ void FFPlayer::videoDecodeLoop() {
     LOGE("#videoDecodeLoop start");
 
     if (mVideoDecoder == nullptr) {
-        LOGE("videoDecodeLoop: video decoder is null");
+        LOGE("#videoDecodeLoop: video decoder is null");
         return;
     }
 
-    mVideoDecoder->setFrameAvailableListener([this](AVFrame *frame) {
-        onVideoFrameAvailable(frame);
+    JNIEnv *env = nullptr;
+    if (mJvm->AttachCurrentThread(&env, nullptr) != JNI_OK) {
+        LOGE("#videoDecodeLoop: attach thread failed");
+        return;
+    }
+
+    mVideoDecoder->setFrameAvailableListener([this, env](AVFrame *frame) {
+        onVideoFrameAvailable(env, frame);
     });
 
     while (mPreparing) {
@@ -188,8 +173,6 @@ void FFPlayer::videoDecodeLoop() {
             break;
         }
 
-        LOGE("-----videoDecodeLoop mPreparing=%d", mPreparing);
-
         LOGE("mVideoPacketQueue pop, %d", mVideoPacketQueue->size());
         locker->lock();
         AVPacket *packet = mVideoPacketQueue->pop();
@@ -197,8 +180,6 @@ void FFPlayer::videoDecodeLoop() {
             locker->waitWithoutLock(-1);
         }
         locker->unlock();
-
-        LOGE("-----videoDecodeLoop>>>>> mPreparing=%d", mPreparing);
 
         if (!mPreparing) {
             if (packet != nullptr) {
@@ -218,35 +199,42 @@ void FFPlayer::videoDecodeLoop() {
         av_freep(&packet);
     }
 
+    if (mJvm != nullptr) {
+        mJvm->DetachCurrentThread();
+    }
+
     LOGE("#videoDecodeLoop end");
 }
 
-void FFPlayer::onVideoFrameAvailable(AVFrame *avFrame) {
+void FFPlayer::onVideoFrameAvailable(JNIEnv *env, AVFrame *avFrame) {
     LOGE("=====onVideoFrameAvailable");
+    if (avFrame->format == AV_PIX_FMT_YUV420P) {
 
-    if (mNativeWindow == nullptr) {
-        return;
+        //unsigned char=byte
+        unsigned char *y = avFrame->data[0];
+        unsigned char *u = avFrame->data[1];
+        unsigned char *v = avFrame->data[2];
+
+        int frameSize = avFrame->width * avFrame->height;
+
+        jbyteArray yBytes = env->NewByteArray(frameSize);
+        env->SetByteArrayRegion(yBytes, 0, frameSize, (jbyte *) y);
+
+        jbyteArray uBytes = env->NewByteArray(frameSize / 4);
+        env->SetByteArrayRegion(uBytes, 0, frameSize / 4, (jbyte *) u);
+
+        jbyteArray vBytes = env->NewByteArray(frameSize / 4);
+        env->SetByteArrayRegion(vBytes, 0, frameSize / 4, (jbyte *) v);
+
+        if (jniContext.jniListener != nullptr) {
+            env->CallVoidMethod(jniContext.jniListener,jniContext.videoFrameAvailable,
+                                yBytes, uBytes, vBytes);
+        }
+
+    } else {
+        LOGE("#onVideoFrameAvailable, unsupported format: %d", avFrame->format);
     }
 
-    LOGE("=====onVideoFrameAvailable>>>: %d %d", avFrame->height,
-         ANativeWindow_getHeight(mNativeWindow));
-
-    // lock native window buffer
-    ANativeWindow_lock(mNativeWindow, &mNativeWindowBuffer, nullptr);
-
-    //锁定当前 Window ，获取屏幕缓冲区 Buffer 的指针
-    auto *dst = static_cast<uint8_t *>(mNativeWindowBuffer.bits);
-    int dstStride = mNativeWindowBuffer.stride * 4;
-    auto *src = (uint8_t * )(avFrame->data[0]);
-    int srcStride = avFrame->linesize[0];
-    // 由于window的stride和帧的stride不同,因此需要逐行复制
-    int height = ANativeWindow_getHeight(mNativeWindow);
-    for (int h = 0; h < height; h++) {
-        memcpy(dst + h * dstStride, src + h * srcStride, srcStride);
-    }
-
-    //解锁当前 Window ，渲染缓冲区数据
-    ANativeWindow_unlockAndPost(mNativeWindow);
 }
 
 //endregion video
@@ -267,8 +255,6 @@ void FFPlayer::packetReadLoop() {
             LOGE("#av_packet_alloc failed");
             continue;
         }
-
-        LOGE("-----packetReadLoop running=%d", mRunning);
 
         int ret = av_read_frame(mAvFormatContext, packet);
         if (ret != 0) {
@@ -330,4 +316,33 @@ void FFPlayer::updatePlayerState(STATE state) {
     LOGI("updatePlayerState, state=%d", state);
     this->mState = state;
 }
+
+
+//region listener
+
+void FFPlayer::setJNIListenContext(JNIEnv *env, jobject jObj) {
+    if (jObj == nullptr) {
+        resetJniListenContext();
+        return;
+    }
+
+    jniContext.jniListener = jObj;
+
+    jclass clazz = env->GetObjectClass(jObj);
+
+    jniContext.videoFrameAvailable = env->GetMethodID(clazz,
+                                                      "onVideoFrameAvailable", "([B[B[B)V");
+
+    jniContext.audioFrameAvailable = env->GetMethodID(clazz,
+                                                      "onVideoFrameAvailable", "([B)V");
+
+}
+
+void FFPlayer::resetJniListenContext() {
+    jniContext.jniListener = nullptr;
+    jniContext.videoFrameAvailable = nullptr;
+    jniContext.audioFrameAvailable = nullptr;
+}
+
+//endregion listener
 

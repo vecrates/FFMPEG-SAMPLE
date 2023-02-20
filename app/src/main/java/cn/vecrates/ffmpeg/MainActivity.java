@@ -106,7 +106,6 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void surfaceChanged(@NonNull SurfaceHolder holder, int format, int width, int height) {
             binding.svVideo.getHolder().removeCallback(surfaceCallback);
-            ffPlayer.setSurface(holder.getSurface(), width, height);
             ToastUtil.show("updated surface: width=" + width + " height=" + height);
         }
 

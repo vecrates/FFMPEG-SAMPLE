@@ -46,8 +46,6 @@ private:
 
     AVRational mFrameRate;
 
-    SwsContext *mSwsContext = nullptr;
-
 };
 
 

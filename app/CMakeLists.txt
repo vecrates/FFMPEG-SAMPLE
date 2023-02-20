@@ -57,7 +57,8 @@ set_target_properties(swscale
 file(GLOB_RECURSE FF_PLAYER_SRC
         ${CPP_DIR}/*.cpp
         ${CPP_DIR}/*.c
-)
+        ${CPP_DIR}/*.h
+        )
 add_library(
         ffplayer
         SHARED

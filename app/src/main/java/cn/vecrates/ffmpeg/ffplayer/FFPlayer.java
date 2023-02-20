@@ -31,15 +31,8 @@ public class FFPlayer {
             Log.e(TAG, "prepare: illegal native object");
             return;
         }
+        nativeSetListener(nativeObj, jniListener); //todo 主线程？
         nativePrepare(nativeObj, file);
-    }
-
-    public void setSurface(Surface surface, int width, int height) {
-        if (nativeObj < 0) {
-            Log.e(TAG, "setSurface: illegal native object");
-            return;
-        }
-        nativeSetSurface(nativeObj, surface, width, height);
     }
 
     public void reset() {
@@ -58,18 +51,40 @@ public class FFPlayer {
         nativeStart(nativeObj);
     }
 
+    //callback
+
+    private final JniListener jniListener = new JniListener() {
+        @Override
+        public void onVideoFrameAvailable(byte[] y, byte[] u, byte[] v) {
+
+        }
+
+        @Override
+        public void onAudioFrameAvailable(byte[] pcmArray) {
+
+        }
+    };
+
+    private native void nativeSetListener(long obj, Object listener);
+
     private native long nativeCreate();
 
     private native void nativeDestroy(long obj);
 
     private native boolean nativePrepare(long obj, String file);
 
-    private native void nativeSetSurface(long obj, Surface surface, int width, int height);
-
     private native void nativeReset(long obj);
 
     private native void nativeStart(long obj);
 
     private native void nativeStop(long obj);
+
+
+    private interface JniListener {
+        void onVideoFrameAvailable(byte[] y, byte[] u, byte[] v);
+
+        void onAudioFrameAvailable(byte[] pcmArray);
+
+    }
 
 }

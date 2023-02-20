@@ -13,6 +13,12 @@
 #include "AvPacketQueue.h"
 #include "../util/Locker.h"
 
+struct JniListenContext {
+    jobject jniListener;
+    jmethodID videoFrameAvailable;
+    jmethodID audioFrameAvailable;
+};
+
 enum class STATE {
     IDLE,
     PREPARED,
@@ -32,11 +38,9 @@ public:
      * @param file
      * @return
      */
-    bool prepare(const std::string &file);
+    bool prepare(JNIEnv *env, const std::string &file);
 
-    void setNativeWindow(ANativeWindow *nativeWindow, int width, int height);
-
-    void releaseNativeWindow();
+    void setJNIListenContext(JNIEnv *env, jobject jObj);
 
     /**
      * 进入 IDLE 状态
@@ -49,7 +53,7 @@ public:
 
     void videoDecodeLoop();
 
-    void onVideoFrameAvailable(AVFrame *avFrame);
+    void onVideoFrameAvailable(JNIEnv *env, AVFrame *avFrame);
 
     void audioDecodeLoop();
 
@@ -57,9 +61,11 @@ public:
 
 private:
 
-    void notifyThreads();
-
     void updatePlayerState(STATE state);
+
+    void resetJniListenContext();
+
+    JavaVM *mJvm = nullptr;
 
     Locker *locker = nullptr;
 
@@ -79,9 +85,7 @@ private:
 
     STATE mState = STATE::IDLE;
 
-    ANativeWindow *mNativeWindow = nullptr;
-
-    ANativeWindow_Buffer mNativeWindowBuffer;
+    JniListenContext jniContext;
 
     bool mPreparing = false;
 

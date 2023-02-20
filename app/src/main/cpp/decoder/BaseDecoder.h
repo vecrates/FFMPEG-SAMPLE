@@ -49,10 +49,6 @@ protected:
 
     AVFrame *mAvFrame = nullptr;
 
-    AVFrame *mAvFrameRGB = nullptr;
-
-    uint8_t *mFrameBuffer;
-
     std::function<void(AVFrame *)> mFrameAvailableListener = nullptr;
 
 

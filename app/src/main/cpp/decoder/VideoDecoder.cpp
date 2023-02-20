@@ -37,10 +37,6 @@ void VideoDecoder::release() {
         avcodec_free_context(&mCodecContext);
         mCodecContext = nullptr;
     }
-    if (mSwsContext != nullptr) {
-        sws_freeContext(mSwsContext);
-        mSwsContext = nullptr;
-    }
     mFrameAvailableListener = nullptr;
     mVideoCodec = nullptr;
 }
@@ -77,30 +73,7 @@ bool VideoDecoder::init() {
     //创建AvFrame，存储解码后的帧
     mAvFrame = av_frame_alloc();
 
-    mAvFrameRGB = av_frame_alloc();
-
-
     return true;
-}
-
-void VideoDecoder::updateSws(int mWidth, int mHeight) {
-    AVStream *stream = mAvFormatContext->streams[getStreamIndex()];
-    AVCodecParameters *codecPar = stream->codecpar;
-    mSwsContext = sws_getContext(codecPar->width, codecPar->height, AVPixelFormat(codecPar->format), //输入
-                                 mWidth, mHeight, AV_PIX_FMT_RGBA, //输出
-                                 SWS_FAST_BILINEAR, //选择缩放算法(只有当输入输出图像大小不同时有效),一般选择SWS_FAST_BILINEAR
-                                 nullptr,  /* 输入图像的滤波器信息, 若不需要传NULL */
-                                 nullptr, /* 输出图像的滤波器信息, 若不需要传NULL */
-                                 nullptr /* 特定缩放算法需要的参数(?)，默认为NULL */
-    );
-
-    //计算 Buffer 的大小
-    int bufferSize = av_image_get_buffer_size(AV_PIX_FMT_RGBA, mWidth, mHeight, 1);
-    //为 m_RGBAFrame 分配空间
-    mFrameBuffer = (uint8_t *) av_malloc(bufferSize * sizeof(uint8_t));
-    //格式化，会将pFrameRGB的数据按RGB格式自动"关联"到buffer，即pFrameRGB中的数据改变了，out_buffer中的数据也会相应的改变
-    av_image_fill_arrays(mAvFrameRGB->data, mAvFrameRGB->linesize, mFrameBuffer,
-                         AV_PIX_FMT_RGBA, mWidth, mHeight, 1);
 }
 
 void VideoDecoder::decode(AVPacket *packet) {
@@ -117,12 +90,8 @@ void VideoDecoder::decode(AVPacket *packet) {
         return;
     }
 
-    //3. 格式转换
-    sws_scale(mSwsContext, (uint8_t const *const *) mAvFrame->data, mAvFrame->linesize,
-              0, mHeight, mAvFrameRGB->data, mAvFrameRGB->linesize);
-
     if (mFrameAvailableListener != nullptr) {
-        mFrameAvailableListener(mAvFrameRGB);
+        mFrameAvailableListener(mAvFrame);
     }
 
     av_frame_unref(mAvFrame);
