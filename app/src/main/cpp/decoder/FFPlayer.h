@@ -63,7 +63,7 @@ private:
 
     void updatePlayerState(STATE state);
 
-    void resetJniListenContext();
+    void resetJniListenContext(JNIEnv *env);
 
     JavaVM *mJvm = nullptr;
 

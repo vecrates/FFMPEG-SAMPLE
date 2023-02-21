@@ -102,7 +102,6 @@ bool FFPlayer::reset() {
         stop();
     }
     mPreparing = false;
-    LOGE("====%d", mPreparing);
     locker->notify();
     if (mVideoDecodeThread != nullptr) {
         mVideoDecodeThread->join();  //todo ANR风险
@@ -117,6 +116,7 @@ bool FFPlayer::reset() {
         delete mVideoDecoder;
         mVideoDecoder = nullptr;
     }
+    mJvm = nullptr;
     updatePlayerState(STATE::IDLE);
     return true;
 }
@@ -226,15 +226,19 @@ void FFPlayer::onVideoFrameAvailable(JNIEnv *env, AVFrame *avFrame) {
         jbyteArray vBytes = env->NewByteArray(frameSize / 4);
         env->SetByteArrayRegion(vBytes, 0, frameSize / 4, (jbyte *) v);
 
-        if (jniContext.jniListener != nullptr) {
-            env->CallVoidMethod(jniContext.jniListener,jniContext.videoFrameAvailable,
+        if (jniContext.jniListener != nullptr && jniContext.videoFrameAvailable != nullptr) {
+            env->CallVoidMethod(jniContext.jniListener, jniContext.videoFrameAvailable,
                                 yBytes, uBytes, vBytes);
         }
 
-    } else {
-        LOGE("#onVideoFrameAvailable, unsupported format: %d", avFrame->format);
+        env->DeleteLocalRef(yBytes);
+        env->DeleteLocalRef(uBytes);
+        env->DeleteLocalRef(vBytes);
+
+        return;
     }
 
+    LOGE("#onVideoFrameAvailable, unsupported format: %d", avFrame->format);
 }
 
 //endregion video
@@ -322,11 +326,11 @@ void FFPlayer::updatePlayerState(STATE state) {
 
 void FFPlayer::setJNIListenContext(JNIEnv *env, jobject jObj) {
     if (jObj == nullptr) {
-        resetJniListenContext();
+        resetJniListenContext(env);
         return;
     }
 
-    jniContext.jniListener = jObj;
+    jniContext.jniListener = env->NewGlobalRef(jObj);
 
     jclass clazz = env->GetObjectClass(jObj);
 
@@ -334,12 +338,15 @@ void FFPlayer::setJNIListenContext(JNIEnv *env, jobject jObj) {
                                                       "onVideoFrameAvailable", "([B[B[B)V");
 
     jniContext.audioFrameAvailable = env->GetMethodID(clazz,
-                                                      "onVideoFrameAvailable", "([B)V");
-
+                                                      "onAudioFrameAvailable", "([B)V");
 }
 
-void FFPlayer::resetJniListenContext() {
-    jniContext.jniListener = nullptr;
+void FFPlayer::resetJniListenContext(JNIEnv *env) {
+    if (jniContext.jniListener != nullptr) {
+        jobject jniListener = jniContext.jniListener;
+        jniContext.jniListener = nullptr;
+        env->DeleteGlobalRef(jniListener);
+    }
     jniContext.videoFrameAvailable = nullptr;
     jniContext.audioFrameAvailable = nullptr;
 }

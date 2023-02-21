@@ -30,7 +30,7 @@ Java_cn_vecrates_ffmpeg_ffplayer_FFPlayer_nativePrepare(JNIEnv *env, jobject ins
                                                         jstring jFile) {
     std::string fileName = str_u::jstring2string(env, jFile);
     auto *ffPlayer = (FFPlayer *) obj;
-    return ffPlayer->prepare(fileName);
+    return ffPlayer->prepare(env, fileName);
 }
 
 extern "C"

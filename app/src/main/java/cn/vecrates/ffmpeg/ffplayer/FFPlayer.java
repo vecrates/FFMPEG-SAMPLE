@@ -1,7 +1,6 @@
 package cn.vecrates.ffmpeg.ffplayer;
 
 import android.util.Log;
-import android.view.Surface;
 
 public class FFPlayer {
 
@@ -15,6 +14,9 @@ public class FFPlayer {
 
     public FFPlayer() {
         nativeObj = nativeCreate();
+        if (nativeObj > 0) {
+            nativeSetListener(nativeObj, jniListener); //todo 主线程？
+        }
     }
 
     public void release() {
@@ -31,7 +33,6 @@ public class FFPlayer {
             Log.e(TAG, "prepare: illegal native object");
             return;
         }
-        nativeSetListener(nativeObj, jniListener); //todo 主线程？
         nativePrepare(nativeObj, file);
     }
 
@@ -56,7 +57,7 @@ public class FFPlayer {
     private final JniListener jniListener = new JniListener() {
         @Override
         public void onVideoFrameAvailable(byte[] y, byte[] u, byte[] v) {
-
+            Log.e(TAG, "onVideoFrameAvailable: " + y.length);
         }
 
         @Override
@@ -65,7 +66,7 @@ public class FFPlayer {
         }
     };
 
-    private native void nativeSetListener(long obj, Object listener);
+    private native void nativeSetListener(long obj, JniListener listener);
 
     private native long nativeCreate();
 
