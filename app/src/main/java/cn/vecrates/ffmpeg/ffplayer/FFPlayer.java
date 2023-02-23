@@ -18,22 +18,29 @@ public class FFPlayer {
 
     public FFPlayer() {
         nativeObj = nativeCreate();
-        if (nativeObj > 0) {
+        if (nativeObj != -1) {
             nativeSetListener(nativeObj, jniListener); //todo 主线程？
+        } else {
+            Log.e(TAG, "FFPlayer: native object create failed");
         }
     }
 
+    private boolean invalid() {
+        return nativeObj == -1;
+    }
+
     public void release() {
-        if (nativeObj < 0) {
+        if (invalid()) {
             Log.e(TAG, "release: illegal native object");
             return;
         }
+        nativeSetListener(nativeObj, null);
         nativeDestroy(nativeObj);
         nativeObj = -1;
     }
 
     public void prepare(String file) {
-        if (nativeObj < 0) {
+        if (invalid()) {
             Log.e(TAG, "prepare: illegal native object");
             return;
         }
@@ -41,7 +48,7 @@ public class FFPlayer {
     }
 
     public void reset() {
-        if (nativeObj < 0) {
+        if (invalid()) {
             Log.e(TAG, "reset: illegal native object");
             return;
         }
@@ -49,7 +56,7 @@ public class FFPlayer {
     }
 
     public void start() {
-        if (nativeObj < 0) {
+        if (invalid()) {
             Log.e(TAG, "play: illegal native object");
             return;
         }
@@ -57,7 +64,7 @@ public class FFPlayer {
     }
 
     public void stop() {
-        if (nativeObj < 0) {
+        if (invalid()) {
             Log.e(TAG, "stop: illegal native object");
             return;
         }
@@ -66,7 +73,7 @@ public class FFPlayer {
 
     @NonNull
     public int[] getVideoSize() {
-        if (nativeObj < 0) {
+        if (invalid()) {
             Log.e(TAG, "getVideoSize: illegal native object");
             return new int[]{0, 0};
         }

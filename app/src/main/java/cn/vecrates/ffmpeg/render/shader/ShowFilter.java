@@ -7,29 +7,10 @@ import android.util.Log;
 import java.nio.FloatBuffer;
 
 import cn.vecrates.ffmpeg.render.util.GLUtil;
+import cn.vecrates.ffmpeg.render.util.ShaderUtil;
 
 
 public class ShowFilter extends BaseFilter {
-
-    protected static final String VERTEX_CODE = "attribute vec4 position;\n" +
-            "attribute vec2 inputTextureCoordinate;\n" +
-            "varying vec2 textureCoordinate;\n" +
-            "uniform mat4 vertexMatrix;\n" +
-            "uniform mat4 textureMatrix;\n" +
-            "void main()\n" +
-            "{\n" +
-            "    gl_Position = vertexMatrix * position;\n" +
-            "    textureCoordinate = (textureMatrix * vec4(inputTextureCoordinate, 0.0, 1.0)).xy;" +
-            "}";
-
-    protected static final String FRAGMENT_CODE = "precision highp float;\n" +
-            "\n" +
-            "varying vec2 textureCoordinate;\n" +
-            "uniform sampler2D inputTexture;\n" +
-            "\n" +
-            "void main() {\n" +
-            "    gl_FragColor = texture2D(inputTexture, textureCoordinate);\n" +
-            "}";
 
     private int texMatrixLoc;
     private int vertMatrixLoc;
@@ -56,7 +37,8 @@ public class ShowFilter extends BaseFilter {
 
     public ShowFilter() {
         super();
-        init(VERTEX_CODE, FRAGMENT_CODE);
+        init(ShaderUtil.readByAssets("shader/base_vertex.glsl"),
+                ShaderUtil.readByAssets("shader/show_fragment.glsl"));
     }
 
     @Override

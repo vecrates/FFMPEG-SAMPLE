@@ -207,7 +207,8 @@ void FFPlayer::videoDecodeLoop() {
 }
 
 void FFPlayer::onVideoFrameAvailable(JNIEnv *env, AVFrame *avFrame) {
-    LOGE("=====onVideoFrameAvailable %d", avFrame->format);
+    LOGE("=====onVideoFrameAvailable %d w=%d h=%d",
+         avFrame->format, avFrame->width, avFrame->height);
     if (avFrame->format == AV_PIX_FMT_YUV420P) {
 
         //unsigned char=byte
