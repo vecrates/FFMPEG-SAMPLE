@@ -2,6 +2,8 @@ package cn.vecrates.ffmpeg.ffplayer;
 
 import android.util.Log;
 
+import androidx.annotation.NonNull;
+
 public class FFPlayer {
 
     private static final String TAG = "FFPlayer";
@@ -11,6 +13,8 @@ public class FFPlayer {
     }
 
     private long nativeObj = -1;
+
+    private FFDecodeListener decodeListener;
 
     public FFPlayer() {
         nativeObj = nativeCreate();
@@ -52,17 +56,43 @@ public class FFPlayer {
         nativeStart(nativeObj);
     }
 
+    public void stop() {
+        if (nativeObj < 0) {
+            Log.e(TAG, "stop: illegal native object");
+            return;
+        }
+        nativeStop(nativeObj);
+    }
+
+    @NonNull
+    public int[] getVideoSize() {
+        if (nativeObj < 0) {
+            Log.e(TAG, "getVideoSize: illegal native object");
+            return new int[]{0, 0};
+        }
+        return nativeGetVideoSize(nativeObj);
+    }
+
+    public void setDecodeListener(FFDecodeListener decodeListener) {
+        this.decodeListener = decodeListener;
+    }
+
     //callback
 
     private final JniListener jniListener = new JniListener() {
         @Override
         public void onVideoFrameAvailable(byte[] y, byte[] u, byte[] v) {
             Log.e(TAG, "onVideoFrameAvailable: " + y.length);
+            if (decodeListener != null) {
+                decodeListener.onVideoFrameAvailable(y, u, v);
+            }
         }
 
         @Override
         public void onAudioFrameAvailable(byte[] pcmArray) {
-
+            if (decodeListener != null) {
+                decodeListener.onAudioFrameAvailable(pcmArray);
+            }
         }
     };
 
@@ -80,12 +110,13 @@ public class FFPlayer {
 
     private native void nativeStop(long obj);
 
+    private native int[] nativeGetVideoSize(long obj);
+
 
     private interface JniListener {
         void onVideoFrameAvailable(byte[] y, byte[] u, byte[] v);
 
         void onAudioFrameAvailable(byte[] pcmArray);
-
     }
 
 }

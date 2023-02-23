@@ -68,15 +68,11 @@ public abstract class BasePass {
         return textureId;
     }
 
-    public void postDraw(Runnable runnable) {
+    protected void postDraw(Runnable runnable) {
         passContext.postDraw(runnable);
     }
 
-    public void postDrawWithoutSwap(Runnable runnable) {
-        passContext.postDrawWithoutSwap(runnable);
-    }
-
-    public void post(Runnable runnable) {
+    protected void post(Runnable runnable) {
         passContext.post(runnable);
     }
 

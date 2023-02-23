@@ -1,6 +1,5 @@
 package cn.vecrates.ffmpeg.render;
 
-import android.graphics.SurfaceTexture;
 import android.opengl.EGLContext;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -12,6 +11,8 @@ import android.view.SurfaceView;
 import androidx.annotation.NonNull;
 
 import cn.vecrates.ffmpeg.BuildConfig;
+import cn.vecrates.ffmpeg.ffplayer.FFDecodeListener;
+import cn.vecrates.ffmpeg.ffplayer.FFPlayer;
 import cn.vecrates.ffmpeg.render.common.GLHandler;
 
 public class VideoDrawer {
@@ -35,6 +36,8 @@ public class VideoDrawer {
 
     private GLHandler glHandler;
     private Handler manageHandler;
+
+    private FFPlayer ffPlayer;
 
     private AbsVideoDrawerProxy drawerProxy;
     private boolean releasableDrawerProxy;
@@ -64,6 +67,35 @@ public class VideoDrawer {
         this.drawerProxy = drawerProxy;
         this.releasableDrawerProxy = releasable;
         this.drawerProxy.setGLThreadProxy(glThreadProxy);
+    }
+
+    public void prepare(String path) {
+        managePost(() -> {
+            releaseFFDecoder();
+            ffPlayer = new FFPlayer();
+            ffPlayer.prepare(path);
+            ffPlayer.setDecodeListener(ffDecodeListener);
+            initDrawer();
+        });
+    }
+
+    private void releaseFFDecoder() {
+        if (ffPlayer != null) {
+            ffPlayer.release();
+            ffPlayer = null;
+        }
+    }
+
+    private void initDrawer() {
+        glPost(() -> {
+            if (drawerProxy != null) {
+                drawerProxy.init();
+            }
+            int[] size = ffPlayer.getVideoSize();
+            renderSize = new Size(size[0], size[1]);
+            notifySizeChanged();
+            Log.e(TAG, "-----initDrawer: " + renderSize.toString());
+        });
     }
 
     private final SurfaceHolder.Callback surfaceListener = new SurfaceHolder.Callback() {
@@ -103,12 +135,18 @@ public class VideoDrawer {
 
         @Override
         public void postDraw(@NonNull Runnable r) {
-
+            if (glHandler != null) {
+                glHandler.runOnGLThread(() -> {
+                    r.run();
+                    glHandler.requestRenderSync();
+                });
+            }
         }
 
         @Override
         public EGLContext getGLContext() {
-            return null;
+            return glHandler != null && glHandler.getGLCore() != null ?
+                    glHandler.getGLCore().getEGLContext() : null;
         }
 
         @NonNull
@@ -128,7 +166,6 @@ public class VideoDrawer {
         @Override
         public void onGLSurfaceCreated() {
             Log.d(TAG, "onGLSurfaceCreated: ");
-
         }
 
         @Override
@@ -142,7 +179,7 @@ public class VideoDrawer {
         }
 
         @Override
-        public void onDrawFrame(SurfaceTexture surfaceTexture) {
+        public void onDrawFrame() {
             try {
                 if (drawerProxy != null) {
                     drawerProxy.draw();
@@ -155,12 +192,31 @@ public class VideoDrawer {
             }
         }
 
+    };
+
+    private final FFDecodeListener ffDecodeListener = new FFDecodeListener() {
         @Override
-        public void onBuffersSwapped() {
+        public void onVideoFrameAvailable(byte[] y, byte[] u, byte[] v) {
+            if (glHandler == null) {
+                return;
+            }
+            Log.e(TAG, "----->onVideoFrameAvailable: ");
+            glHandler.clearDrawMessages();
+            glHandler.postDrawMessage(() -> {
+                if (drawerProxy != null) {
+                    drawerProxy.updateYUV(y, u, v);
+                }
+                if (glHandler != null) {
+                    glHandler.requestRenderSync();
+                }
+            });
+        }
+
+        @Override
+        public void onAudioFrameAvailable(byte[] pcmArray) {
 
         }
     };
-
 
     public void managePost(@NonNull Runnable r) {
         if (manageHandler != null) {
@@ -198,5 +254,26 @@ public class VideoDrawer {
             }
         });
     }
+
+
+    //region control
+
+    public void start() {
+        managePost(() -> {
+            if (ffPlayer != null) {
+                ffPlayer.start();
+            }
+        });
+    }
+
+    public void stop() {
+        managePost(() -> {
+            if (ffPlayer != null) {
+                ffPlayer.stop();
+            }
+        });
+    }
+
+    //endregion
 
 }

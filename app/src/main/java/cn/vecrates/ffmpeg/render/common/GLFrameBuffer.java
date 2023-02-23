@@ -2,10 +2,6 @@ package cn.vecrates.ffmpeg.render.common;
 
 import android.opengl.GLES20;
 
-/**
- * Created by yueweiwei on 2018/5/16.
- */
-
 public class GLFrameBuffer {
 
     private int[] mFrameTemp;
@@ -20,25 +16,10 @@ public class GLFrameBuffer {
         filterStyle = nearest ? GLES20.GL_NEAREST : GLES20.GL_LINEAR;
     }
 
-    /**
-     * 绑定到FrameBuffer，不使用RenderBuffer。{@link #bindFrameBuffer(int, int, boolean)}
-     *
-     * @param width  宽度
-     * @param height 高度
-     * @return 绑定结果，0表示成功，其他值为GL错误
-     */
     public int bindFrameBuffer(int width, int height) {
         return bindFrameBuffer(width, height, false);
     }
 
-    /**
-     * 绑定到FrameBuffer
-     *
-     * @param width           宽度
-     * @param height          高度
-     * @param hasRenderBuffer 是否使用renderBuffer
-     * @return 绑定结果，0表示成功，其他值为GL错误
-     */
     public int bindFrameBuffer(int width, int height, boolean hasRenderBuffer) {
         if (lastWidth != width || lastHeight != height) {
             destroyFrameBuffer();
@@ -53,20 +34,6 @@ public class GLFrameBuffer {
         }
     }
 
-    /**
-     * 创建FrameBuffer
-     *
-     * @param hasRenderBuffer 是否启用RenderBuffer
-     * @param width           宽度
-     * @param height          高度
-     * @param texType         类型，一般为{@link GLES20#GL_TEXTURE_2D}
-     * @param texFormat       纹理格式，一般为{@link GLES20#GL_RGBA}、{@link GLES20#GL_RGB}等
-     * @param minParams       纹理的缩小过滤参数
-     * @param maxParams       纹理的放大过滤参数
-     * @param wrapS           纹理的S环绕参数
-     * @param wrapT           纹理的W环绕参数
-     * @return 创建结果，0表示成功，其他值为GL错误
-     */
     public int createFrameBuffer(boolean hasRenderBuffer, int width, int height, int texType, int texFormat,
                                  int minParams, int maxParams, int wrapS, int wrapT) {
         mFrameTemp = new int[4];
@@ -95,11 +62,6 @@ public class GLFrameBuffer {
         return GLES20.glGetError();
     }
 
-    /**
-     * 绑定FrameBuffer，只有之前创建过FrameBuffer，才能调用此方法进行绑定
-     *
-     * @return 绑定结果
-     */
     public int bindFrameBuffer() {
         if (mFrameTemp == null) return -1;
         GLES20.glGetIntegerv(GLES20.GL_FRAMEBUFFER_BINDING, mFrameTemp, 3);
@@ -108,27 +70,16 @@ public class GLFrameBuffer {
         return GLES20.glGetError();
     }
 
-    /**
-     * 取消FrameBuffer绑定
-     */
     public void unBindFrameBuffer() {
         if (mFrameTemp != null) {
             GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, mFrameTemp[3]);
         }
     }
 
-    /**
-     * 获取绘制再FrameBuffer中的内容
-     *
-     * @return FrameBuffer绘制内容的纹理ID
-     */
     public int getAttachedTexture() {
         return mFrameTemp != null ? mFrameTemp[1] : -1;
     }
 
-    /**
-     * 销毁FrameBuffer
-     */
     public void destroyFrameBuffer() {
         if (mFrameTemp != null) {
             try {
@@ -143,4 +94,5 @@ public class GLFrameBuffer {
             mFrameTemp = null;
         }
     }
+
 }

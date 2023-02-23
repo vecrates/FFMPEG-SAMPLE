@@ -24,10 +24,8 @@ public class GLHandler implements Handler.Callback {
     private GLSurface previewGLSurface;
     private EGLSurface offscreenSurface;
     private Surface surface;
-    private SurfaceTexture st;
 
     private boolean useGL3 = false;
-    private boolean lockDraw = false;
 
     private GLHandlerListener listener;
 
@@ -96,10 +94,6 @@ public class GLHandler implements Handler.Callback {
         this.useGL3 = true;
     }
 
-    public void setLockDraw(boolean lockDraw) {
-        this.lockDraw = lockDraw;
-    }
-
     public boolean supportGL3() {
         return eglCore != null && eglCore.getGlVersion() >= 3;
     }
@@ -142,9 +136,9 @@ public class GLHandler implements Handler.Callback {
         handler.sendMessage(message);
     }
 
-    public void requestRenderSync(SurfaceTexture surfaceTexture) {
+    public void requestRenderSync() {
         if (destroyed) return;
-        draw(surfaceTexture);
+        draw();
     }
 
     public void clearMessages() {
@@ -177,7 +171,7 @@ public class GLHandler implements Handler.Callback {
                 recreateGLSurfaceInner();
                 break;
             case GL_DRAW:
-                draw((SurfaceTexture) msg.obj);
+                draw();
                 break;
             default:
                 break;
@@ -230,26 +224,13 @@ public class GLHandler implements Handler.Callback {
         }
     }
 
-    private void draw(SurfaceTexture surfaceTexture) {
-        if (previewGLSurface == null || lockDraw) {
+    private void draw() {
+        if (previewGLSurface == null || listener == null) {
             return;
         }
 
-        if (st == null) {
-            st = surfaceTexture;
-        }
-
-        if (surfaceTexture == null) {
-            surfaceTexture = st;
-        }
-
-        if (listener == null) {
-            return;
-        }
-
-        listener.onDrawFrame(surfaceTexture);
+        listener.onDrawFrame();
         previewGLSurface.swapBuffers();
-        listener.onBuffersSwapped();
     }
 
     /**
@@ -317,9 +298,7 @@ public class GLHandler implements Handler.Callback {
 
         void onGLContextShutdown();
 
-        void onDrawFrame(SurfaceTexture surfaceTexture);
-
-        void onBuffersSwapped();
+        void onDrawFrame();
 
     }
 

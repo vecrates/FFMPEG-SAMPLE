@@ -9,8 +9,6 @@ public interface PassContext {
 
     void postDraw(Runnable runnable);
 
-    void postDrawWithoutSwap(Runnable runnable);
-
     void post(Runnable runnable);
 
     EGLContext getGLContext();

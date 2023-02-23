@@ -20,7 +20,8 @@ import com.zhihu.matisse.engine.impl.GlideEngine;
 import java.util.List;
 
 import cn.vecrates.ffmpeg.databinding.ActivityMainBinding;
-import cn.vecrates.ffmpeg.ffplayer.FFPlayer;
+import cn.vecrates.ffmpeg.render.VideoDrawer;
+import cn.vecrates.ffmpeg.render.VideoDrawerProxy;
 import cn.vecrates.ffmpeg.util.ThreadHelper;
 import cn.vecrates.ffmpeg.util.ToastUtil;
 import cn.vecrates.ffmpeg.util.UriUtil;
@@ -33,7 +34,7 @@ public class MainActivity extends AppCompatActivity {
 
     private ActivityMainBinding binding;
 
-    private FFPlayer ffPlayer;
+    private VideoDrawer videoDrawer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,12 +54,13 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initPlayer() {
-        ffPlayer = new FFPlayer();
+        videoDrawer = new VideoDrawer();
+        videoDrawer.setSurfaceView(binding.svVideo);
+        videoDrawer.setDrawerProxy(new VideoDrawerProxy(), true);
     }
 
     private void updatePlayer(String path) {
-        ffPlayer.reset();
-        ffPlayer.prepare(path);
+        videoDrawer.prepare(path);
         updateSurface(path);
     }
 
@@ -116,7 +118,7 @@ public class MainActivity extends AppCompatActivity {
     };
 
     private void onClickPlay(View view) {
-        ffPlayer.start();
+        videoDrawer.start();
     }
 
     private void onClickAlbum(View v) {

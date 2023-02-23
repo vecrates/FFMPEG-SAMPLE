@@ -8,7 +8,6 @@ import androidx.annotation.NonNull;
 import androidx.core.util.Consumer;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 import cn.vecrates.ffmpeg.render.pass.BasePass;
@@ -64,13 +63,6 @@ public abstract class AbsDrawerProxy {
         }
 
         @Override
-        public void postDrawWithoutSwap(Runnable runnable) {
-            if (glThreadProxy != null) {
-                glThreadProxy.postDrawWithoutSwap(runnable);
-            }
-        }
-
-        @Override
         public void post(Runnable runnable) {
             if (glThreadProxy != null) {
                 glThreadProxy.post(runnable);
@@ -95,30 +87,11 @@ public abstract class AbsDrawerProxy {
         this.glThreadProxy = glThreadProxy;
     }
 
-
     public void onSizeChangedAsync(@NonNull Size viewportSize, @NonNull Size renderSize) {
-        onSizeChangedAsync(viewportSize, renderSize, null);
+        passContext.post(() -> onSizeChanged(viewportSize, renderSize));
     }
 
-    public void onSizeChangedAsync(@NonNull Size viewportSize, @NonNull Size renderSize, Consumer<Object> c) {
-        passContext.post(() -> {
-            onSizeChanged(viewportSize, renderSize);
-            if (c != null) {
-                c.accept(null);
-            }
-        });
-    }
-
-    /**
-     * call on gl
-     */
-    @CallSuper
-    protected void onSizeChanged(@NonNull Size viewportSize, @NonNull Size renderSize) {
-        Size lastRenderSize = new Size(renderWidth, renderHeight);
-        Size lastViewportSize = new Size(viewportWidth, viewportHeight);
-        if (lastRenderSize.equals(renderSize) && lastViewportSize.equals(viewportSize)) {
-            return;
-        }
+    public void onSizeChanged(@NonNull Size viewportSize, @NonNull Size renderSize) {
         this.renderWidth = renderSize.getWidth();
         this.renderHeight = renderSize.getHeight();
         this.viewportWidth = viewportSize.getWidth();
@@ -168,7 +141,6 @@ public abstract class AbsDrawerProxy {
     public Size getRenderSize() {
         return new Size(renderWidth, renderHeight);
     }
-
 
     /**
      * call on GL

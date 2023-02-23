@@ -59,6 +59,8 @@ public:
 
     void packetReadLoop();
 
+    int* getVideoSize();
+
 private:
 
     void updatePlayerState(STATE state);

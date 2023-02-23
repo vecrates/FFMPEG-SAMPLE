@@ -34,8 +34,6 @@ public:
 
     int getHeight();
 
-    void updateSws(int width, int height);
-
 private:
 
     void release();

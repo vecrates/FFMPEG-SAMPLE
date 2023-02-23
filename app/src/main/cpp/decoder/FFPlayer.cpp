@@ -207,7 +207,7 @@ void FFPlayer::videoDecodeLoop() {
 }
 
 void FFPlayer::onVideoFrameAvailable(JNIEnv *env, AVFrame *avFrame) {
-    LOGE("=====onVideoFrameAvailable");
+    LOGE("=====onVideoFrameAvailable %d", avFrame->format);
     if (avFrame->format == AV_PIX_FMT_YUV420P) {
 
         //unsigned char=byte
@@ -349,6 +349,13 @@ void FFPlayer::resetJniListenContext(JNIEnv *env) {
     }
     jniContext.videoFrameAvailable = nullptr;
     jniContext.audioFrameAvailable = nullptr;
+}
+
+int *FFPlayer::getVideoSize() {
+    if (mVideoDecoder == nullptr) {
+        return new int[]{0, 0};
+    }
+    return new int[]{mVideoDecoder->getWidth(), mVideoDecoder->getHeight()};
 }
 
 //endregion listener

@@ -62,3 +62,15 @@ Java_cn_vecrates_ffmpeg_ffplayer_FFPlayer_nativeStop(JNIEnv *env, jobject instan
     auto *ffPlayer = (FFPlayer *) obj;
     ffPlayer->stop();
 }
+
+extern "C"
+JNIEXPORT jintArray JNICALL
+Java_cn_vecrates_ffmpeg_ffplayer_FFPlayer_nativeGetVideoSize(JNIEnv *env, jobject instance,
+                                                             jlong obj) {
+    auto *ffPlayer = (FFPlayer *) obj;
+    int *size = ffPlayer->getVideoSize();
+    jintArray jSize = env->NewIntArray(2);
+    jint jIntBuf[] = {size[0], size[1]};
+    env->SetIntArrayRegion(jSize, 0, 2, jIntBuf);
+    return jSize;
+}
