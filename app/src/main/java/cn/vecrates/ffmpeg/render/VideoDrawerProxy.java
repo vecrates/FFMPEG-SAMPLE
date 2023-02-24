@@ -29,7 +29,7 @@ public class VideoDrawerProxy extends AbsVideoDrawerProxy {
     @Override
     void updateYUV(byte[] y, byte[] u, byte[] v) {
         if (formatPass != null) {
-            formatPass.updateYUV(y, v, u);
+            formatPass.updateYUV(y, u, v);
         }
     }
 
