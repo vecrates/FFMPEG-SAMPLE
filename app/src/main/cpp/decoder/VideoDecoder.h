@@ -34,6 +34,8 @@ public:
 
     int getHeight();
 
+    long getCurrentTimestamp() override;
+
 private:
 
     void release();

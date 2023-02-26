@@ -20,13 +20,15 @@ public class YUVFilter extends BaseFilter {
     private int uTextureLoc;
     private int vTextureLoc;
 
-    private final float[] vertCoordinates = {-1.0f, -1.0f,  // 0 lb
+    private final float[] vertCoordinates = {
+            -1.0f, -1.0f,  // 0 lb
             1.0f, -1.0f,   // 1 rb
             -1.0f, 1.0f,   // 2 lt
             1.0f, 1.0f,    // 3 rt
     };
 
-    private final float[] texCoordinates = {0.0f, 0.0f,     // 0 lb
+    private final float[] texCoordinates = {
+            0.0f, 0.0f,     // 0 lb
             1.0f, 0.0f,     // 1 rb
             0.0f, 1.0f,     // 2 lt
             1.0f, 1.0f      // 3 rt

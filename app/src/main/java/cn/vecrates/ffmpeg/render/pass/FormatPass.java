@@ -38,7 +38,8 @@ public class FormatPass extends BasePass {
      * call on gl
      */
     public void updateYUV(byte[] y, byte[] u, byte[] v) {
-        Log.e("$$$$", "####updateYUV: ");
+        Log.e("$$$$", "updateYUV: " +
+                "y=" + y.length + " u=" + u.length + " v=" + v.length);
         yBuffer = ByteBuffer.wrap(y);
         uBuffer = ByteBuffer.wrap(u);
         vBuffer = ByteBuffer.wrap(v);

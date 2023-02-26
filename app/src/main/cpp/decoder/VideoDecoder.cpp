@@ -47,6 +47,15 @@ bool VideoDecoder::init() {
     mWidth = codecPar->width;
     mHeight = codecPar->height;
 
+    AVDictionaryEntry *entry
+            = av_dict_get(stream->metadata, "rotate", nullptr, AV_DICT_MATCH_CASE);
+
+    if (entry != nullptr) {
+        LOGE("----->%s=%s", entry->key, entry->value);
+    } else {
+        LOGE("-----null");
+    }
+
     //找到对应的解码器
     mVideoCodec = avcodec_find_decoder(codecPar->codec_id);
     if (mVideoCodec == nullptr) {
@@ -90,11 +99,15 @@ void VideoDecoder::decode(AVPacket *packet) {
         return;
     }
 
+    long frameTimeSec = mAvFrame->pts;
+    this->mCurrentTimestamp = frameTimeSec * av_q2d(mTimeBase) * 1000;
+
     if (mFrameAvailableListener != nullptr) {
         mFrameAvailableListener(mAvFrame);
     }
 
     av_frame_unref(mAvFrame);
+
 }
 
 void VideoDecoder::flush() {
@@ -108,3 +121,9 @@ int VideoDecoder::getWidth() {
 int VideoDecoder::getHeight() {
     return mHeight;
 }
+
+long VideoDecoder::getCurrentTimestamp() {
+    return mCurrentTimestamp;
+}
+
+

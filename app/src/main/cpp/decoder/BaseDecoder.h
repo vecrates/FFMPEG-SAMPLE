@@ -39,6 +39,8 @@ public:
 
     void setFrameAvailableListener(std::function<void(AVFrame *)>);
 
+    virtual long getCurrentTimestamp();
+
 protected:
 
     AVFormatContext *mAvFormatContext = nullptr;
@@ -51,10 +53,15 @@ protected:
 
     std::function<void(AVFrame *)> mFrameAvailableListener = nullptr;
 
+    long mCurrentTimestamp;
+
+    AVRational mTimeBase{};
+
+    long mDuration{};
 
 private:
 
-    int streamIndex = -1;
+    int mStreamIndex = -1;
 
 };
 

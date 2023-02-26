@@ -7,6 +7,7 @@
 #include <android/log.h>
 #include <android/native_window.h>
 #include <android/native_window_jni.h>
+#include "../util/TimeUtil.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -166,6 +167,9 @@ void FFPlayer::videoDecodeLoop() {
         onVideoFrameAvailable(env, frame);
     });
 
+    long startSyncTimestamp = TimeUtil::timestampMicroSec();
+    long decodeStartTimestamp = 0;
+
     while (mPreparing) {
 
         if (mVideoPacketQueue == nullptr) {
@@ -197,6 +201,14 @@ void FFPlayer::videoDecodeLoop() {
 
         av_packet_free(&packet);
         av_freep(&packet);
+
+        long escapedTimeUs = TimeUtil::timestampMicroSec() - startSyncTimestamp;
+        long decodedTimeUs = mVideoDecoder->getCurrentTimestamp() - decodeStartTimestamp;
+        long sleepMs = (decodedTimeUs - escapedTimeUs) / 1000;
+        if (sleepMs > 0) {
+            locker->wait(sleepMs);
+        }
+
     }
 
     if (mJvm != nullptr) {
@@ -254,6 +266,7 @@ void FFPlayer::audioDecodeLoop() {
 
 void FFPlayer::packetReadLoop() {
     LOGE("packetReadLoop: start");
+
     while (mRunning) {
         AVPacket *packet = av_packet_alloc();
         if (packet == nullptr) {
@@ -282,13 +295,13 @@ void FFPlayer::packetReadLoop() {
         if (packet->stream_index == mVideoDecoder->getStreamIndex()
             && mVideoPacketQueue != nullptr) {
             LOGE("mVideoPacketQueue push, %d", mVideoPacketQueue->size());
-            int trtTimes = 3;
-            while (trtTimes-- > 0 && mRunning) {
+            int tryTimes = 3;
+            while (tryTimes-- > 0 && mRunning) {
                 if (mVideoPacketQueue->push(packet)) {
                     pushed = true;
                     break;
                 }
-                locker->waitWithoutLock(10);
+                locker->waitWithoutLock(20);
             }
         } else {
             //TODO audio
