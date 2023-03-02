@@ -4,6 +4,8 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 
+import java.util.Arrays;
+
 public class FFPlayer {
 
     private static final String TAG = "FFPlayer";
@@ -97,6 +99,7 @@ public class FFPlayer {
 
         @Override
         public void onAudioFrameAvailable(byte[] pcmArray) {
+            Log.e(TAG, "onAudioFrameAvailable: pcm=" + Arrays.toString(pcmArray));
             if (decodeListener != null) {
                 decodeListener.onAudioFrameAvailable(pcmArray);
             }

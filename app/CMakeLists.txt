@@ -69,6 +69,8 @@ target_link_libraries(
 
         log
         android
+        EGL
+        GLESv2
 
         avcodec
         avfilter
@@ -76,4 +78,5 @@ target_link_libraries(
         avutil
         swresample
         swscale
+
 )

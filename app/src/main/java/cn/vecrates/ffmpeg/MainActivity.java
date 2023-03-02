@@ -2,14 +2,12 @@ package cn.vecrates.ffmpeg;
 
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
-import android.media.MediaMetadataRetriever;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.SurfaceHolder;
+import android.util.Size;
 import android.view.View;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 
@@ -20,10 +18,11 @@ import com.zhihu.matisse.engine.impl.GlideEngine;
 import java.util.List;
 
 import cn.vecrates.ffmpeg.databinding.ActivityMainBinding;
+import cn.vecrates.ffmpeg.render.DrawerListener;
 import cn.vecrates.ffmpeg.render.VideoDrawer;
 import cn.vecrates.ffmpeg.render.VideoDrawerProxy;
+import cn.vecrates.ffmpeg.util.ScreenUtil;
 import cn.vecrates.ffmpeg.util.ThreadHelper;
-import cn.vecrates.ffmpeg.util.ToastUtil;
 import cn.vecrates.ffmpeg.util.UriUtil;
 
 public class MainActivity extends AppCompatActivity {
@@ -54,6 +53,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initPlayer() {
+        if (videoDrawer != null) {
+            videoDrawer.release();
+            videoDrawer = null;
+        }
         videoDrawer = new VideoDrawer();
         videoDrawer.setSurfaceView(binding.svVideo);
         videoDrawer.setDrawerProxy(new VideoDrawerProxy(), true);
@@ -61,61 +64,39 @@ public class MainActivity extends AppCompatActivity {
 
     private void updatePlayer(String path) {
         videoDrawer.prepare(path);
-        updateSurface(path);
+        videoDrawer.setDrawerListener(drawerListener);
     }
 
-    private void updateSurface(String path) {
-        ThreadHelper.runBackground(() -> {
-            MediaMetadataRetriever retriever = null;
-            try {
-                retriever = new MediaMetadataRetriever();
-                retriever.setDataSource(path);
-                int width = Integer.parseInt(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH));
-                int height = Integer.parseInt(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT));
-                ThreadHelper.runOnUIThread(() -> {
-                    binding.svVideo.getHolder().addCallback(surfaceCallback);
-                    int usableHeight = binding.tvAlbum.getTop();
-                    int usableWidth = binding.clRoot.getWidth();
-                    float ratioUsable = (float) usableWidth / usableHeight;
-                    float ratioVideo = (float) width / height;
-                    int finalWidth = usableWidth;
-                    int finalHeight = (int) (finalWidth / ratioVideo);
-                    if (ratioUsable > ratioVideo) {
-                        finalHeight = usableHeight;
-                        finalWidth = (int) (finalHeight * ratioVideo);
-                    }
-                    ConstraintLayout.LayoutParams params = (ConstraintLayout.LayoutParams) binding.svVideo.getLayoutParams();
-                    params.width = finalWidth;
-                    params.height = finalHeight;
-                    binding.svVideo.setLayoutParams(params);
-                });
-            } catch (Exception e) {
-                e.printStackTrace();
-            } finally {
-                if (retriever != null) {
-                    retriever.release();
+    private final DrawerListener drawerListener = new DrawerListener() {
+        @Override
+        public void onPrepared() {
+            ThreadHelper.runOnUIThread(() -> {
+                if (isDestroyed() || isFinishing()) {
+                    return;
                 }
-            }
-        });
-    }
-
-    private final SurfaceHolder.Callback surfaceCallback = new SurfaceHolder.Callback() {
-        @Override
-        public void surfaceCreated(@NonNull SurfaceHolder holder) {
-
-        }
-
-        @Override
-        public void surfaceChanged(@NonNull SurfaceHolder holder, int format, int width, int height) {
-            binding.svVideo.getHolder().removeCallback(surfaceCallback);
-            ToastUtil.show("updated surface: width=" + width + " height=" + height);
-        }
-
-        @Override
-        public void surfaceDestroyed(@NonNull SurfaceHolder holder) {
-
+                updateSurfaceSize();
+            });
         }
     };
+
+    private void updateSurfaceSize() {
+        Size size = videoDrawer.getVideoSize();
+        int usableHeight = binding.tvAlbum.getTop() - ScreenUtil.dp2px(40);
+        int usableWidth = binding.clRoot.getWidth();
+        float ratioUsable = (float) usableWidth / usableHeight;
+        float ratioVideo = (float) size.getWidth() / size.getHeight();
+        int finalWidth = usableWidth;
+        int finalHeight = (int) (finalWidth / ratioVideo);
+        if (ratioUsable > ratioVideo) {
+            finalHeight = usableHeight;
+            finalWidth = (int) (finalHeight * ratioVideo);
+        }
+        ConstraintLayout.LayoutParams params = (ConstraintLayout.LayoutParams) binding.svVideo.getLayoutParams();
+        params.width = finalWidth;
+        params.height = finalHeight;
+        binding.svVideo.setLayoutParams(params);
+
+    }
 
     private void onClickPlay(View view) {
         videoDrawer.start();

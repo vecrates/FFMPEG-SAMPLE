@@ -30,19 +30,23 @@ public:
 
     void flush() override;
 
+    void setFrameAvailableListener(std::function<void(AVFrame *)>);
+
     int getWidth();
 
     int getHeight();
 
-    long getCurrentTimestamp() override;
-
 private:
 
-    void release();
+    AVCodec *mVideoCodec = nullptr;
+
+    std::function<void(AVFrame *)> mFrameAvailableListener = nullptr;
 
     int mWidth = 0;
 
     int mHeight = 0;
+
+    int mRotate = 0;
 
     AVRational mFrameRate;
 

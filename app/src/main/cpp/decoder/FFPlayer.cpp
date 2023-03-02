@@ -22,13 +22,19 @@ extern "C" {
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO,"FFPlayer",__VA_ARGS__)
 
 FFPlayer::FFPlayer() {
-    locker = new Locker();
+    mVideoQueueLocker = new Locker();
+    mVideoSyncLocker = new Locker();
+    mAudioQueueLocker = new Locker();
+    mAudioSyncLocker = new Locker();
 }
 
 FFPlayer::~FFPlayer() {
     reset();
 
-    delete locker; //fixme 线程安全？
+    delete mVideoQueueLocker; //fixme 线程安全？
+    delete mVideoSyncLocker;
+    delete mAudioQueueLocker;
+    delete mAudioSyncLocker;
 }
 
 bool FFPlayer::prepare(JNIEnv *env, const std::string &file) {
@@ -43,6 +49,10 @@ bool FFPlayer::prepare(JNIEnv *env, const std::string &file) {
     env->GetJavaVM(&mJvm);
 
     mAvFormatContext = avformat_alloc_context();
+
+    /*LOGE("=============file format===============");
+    av_dump_format(mAvFormatContext, 0, file.c_str(), 0);
+    LOGE("=============file format===============");*/
 
     int ret = avformat_open_input(&mAvFormatContext, file.c_str(),
                                   nullptr, nullptr);
@@ -81,7 +91,8 @@ bool FFPlayer::prepare(JNIEnv *env, const std::string &file) {
     mVideoDecoder->init();
 
     if (audioStreamIndex != -1) {
-        //todo audio decoder
+        mAudioDecoder = new AudioDecoder(mAvFormatContext, audioStreamIndex);
+        mAudioDecoder->init();
     }
 
     mVideoPacketQueue = new AvPacketQueue(60);
@@ -89,7 +100,12 @@ bool FFPlayer::prepare(JNIEnv *env, const std::string &file) {
 
     //std::thread 调用类的成员函数需要传递类的一个对象作为参数：
     mVideoDecodeThread = new std::thread(&FFPlayer::videoDecodeLoop, this);
-    /*此函数必须在线程创建时立即调用，且调用此函数会使其不能被join
+
+    if (mAudioDecoder != nullptr) {
+        mAudioDecodeThread = new std::thread(&FFPlayer::audioDecodeLoop, this);
+    }
+
+    /*attach函数必须在线程创建时立即调用，且调用此函数会使其不能被join
     没有执行join或detach的线程在程序结束时会引发异常*/
 
     updatePlayerState(STATE::PREPARED);
@@ -103,10 +119,14 @@ bool FFPlayer::reset() {
         stop();
     }
     mPreparing = false;
-    locker->notify();
+    notifyLockers();
     if (mVideoDecodeThread != nullptr) {
         mVideoDecodeThread->join();  //todo ANR风险
         mVideoDecodeThread = nullptr;
+    }
+    if (mAudioDecodeThread != nullptr) {
+        mAudioDecodeThread->join();  //todo ANR风险
+        mAudioDecodeThread = nullptr;
     }
     if (mAvFormatContext != nullptr) {
         avformat_close_input(&mAvFormatContext);
@@ -116,6 +136,10 @@ bool FFPlayer::reset() {
     if (mVideoDecoder != nullptr) {
         delete mVideoDecoder;
         mVideoDecoder = nullptr;
+    }
+    if (mAudioDecoder != nullptr) {
+        delete mAudioDecoder;
+        mAudioDecoder = nullptr;
     }
     mJvm = nullptr;
     updatePlayerState(STATE::IDLE);
@@ -140,10 +164,25 @@ void FFPlayer::stop() {
         return;
     }
     mRunning = false;
-    locker->notify();
+    notifyLockers();
     if (mPacketReadThread != nullptr) {
         mPacketReadThread->join();
         mPacketReadThread = nullptr;
+    }
+}
+
+void FFPlayer::notifyLockers() {
+    if (mVideoSyncLocker != nullptr) {
+        mVideoSyncLocker->notify();
+    }
+    if (mVideoQueueLocker != nullptr) {
+        mVideoQueueLocker->notify();
+    }
+    if (mAudioSyncLocker != nullptr) {
+        mAudioSyncLocker->notify();
+    }
+    if (mAudioQueueLocker != nullptr) {
+        mAudioQueueLocker->notify();
     }
 }
 
@@ -167,7 +206,7 @@ void FFPlayer::videoDecodeLoop() {
         onVideoFrameAvailable(env, frame);
     });
 
-    long startSyncTimestamp = TimeUtil::timestampMicroSec();
+    long startSyncTimestamp = -1;
     long decodeStartTimestamp = 0;
 
     while (mPreparing) {
@@ -178,12 +217,12 @@ void FFPlayer::videoDecodeLoop() {
         }
 
         LOGE("mVideoPacketQueue pop, %d", mVideoPacketQueue->size());
-        locker->lock();
+        mVideoQueueLocker->lock();
         AVPacket *packet = mVideoPacketQueue->pop();
         if (packet == nullptr && mPreparing) {
-            locker->waitWithoutLock(-1);
+            mVideoQueueLocker->waitWithoutLock(-1);
         }
-        locker->unlock();
+        mVideoQueueLocker->unlock();
 
         if (!mPreparing) {
             if (packet != nullptr) {
@@ -202,11 +241,15 @@ void FFPlayer::videoDecodeLoop() {
         av_packet_free(&packet);
         av_freep(&packet);
 
+        if (startSyncTimestamp < 0) {
+            startSyncTimestamp = TimeUtil::timestampMicroSec();;
+        }
         long escapedTimeUs = TimeUtil::timestampMicroSec() - startSyncTimestamp;
         long decodedTimeUs = mVideoDecoder->getCurrentTimestamp() - decodeStartTimestamp;
         long sleepMs = (decodedTimeUs - escapedTimeUs) / 1000;
+        LOGE("#videoDecodeLoop slp=%ld", sleepMs);
         if (sleepMs > 0) {
-            locker->wait(sleepMs);
+            mVideoSyncLocker->wait(sleepMs);
         }
 
     }
@@ -239,8 +282,8 @@ void FFPlayer::onVideoFrameAvailable(JNIEnv *env, AVFrame *avFrame) {
         jbyteArray vBytes = env->NewByteArray(frameSize / 4);
         env->SetByteArrayRegion(vBytes, 0, frameSize / 4, (jbyte *) v);
 
-        if (jniContext.jniListener != nullptr && jniContext.videoFrameAvailable != nullptr) {
-            env->CallVoidMethod(jniContext.jniListener, jniContext.videoFrameAvailable,
+        if (mJniContext.jniListener != nullptr && mJniContext.videoFrameAvailable != nullptr) {
+            env->CallVoidMethod(mJniContext.jniListener, mJniContext.videoFrameAvailable,
                                 yBytes, uBytes, vBytes);
         }
 
@@ -259,13 +302,92 @@ void FFPlayer::onVideoFrameAvailable(JNIEnv *env, AVFrame *avFrame) {
 //region audio
 
 void FFPlayer::audioDecodeLoop() {
+    LOGE("#audioDecodeLoop start");
+
+    if (mAudioDecoder == nullptr) {
+        LOGE("#audioDecodeLoop: audio decoder is null");
+        return;
+    }
+
+    JNIEnv *env = nullptr;
+    if (mJvm->AttachCurrentThread(&env, nullptr) != JNI_OK) {
+        LOGE("#audioDecodeLoop: attach thread failed");
+        return;
+    }
+
+    mAudioDecoder->setFrameAvailableListener([this, env](int8_t *pcmBuffer, int bufferSize) {
+        onAudioFrameAvailable(env, pcmBuffer, bufferSize);
+    });
+
+    long startSyncTimestamp = -1;
+    long decodeStartTimestamp = 0;
+
+    while (mPreparing) {
+
+        if (mAudioPacketQueue == nullptr) {
+            LOGE("exception: audio queue is null");
+            break;
+        }
+
+        mAudioQueueLocker->lock();
+        AVPacket *packet = mAudioPacketQueue->pop();
+        if (packet == nullptr && mPreparing) {
+            mAudioQueueLocker->waitWithoutLock(-1);
+        }
+        mAudioQueueLocker->unlock();
+
+        if (!mPreparing) {
+            if (packet != nullptr) {
+                av_packet_free(&packet);
+                av_freep(&packet);
+            }
+            break;
+        }
+
+        if (packet == nullptr) {
+            continue;
+        }
+
+        mAudioDecoder->decode(packet);
+
+        /*if (startSyncTimestamp < 0) {
+            startSyncTimestamp = TimeUtil::timestampMicroSec();;
+        }
+        long escapedTimeUs = TimeUtil::timestampMicroSec() - startSyncTimestamp;
+        long decodedTimeUs = mAudioDecoder->getCurrentTimestamp() - decodeStartTimestamp;
+        long sleepMs = (decodedTimeUs - escapedTimeUs) / 1000;
+        LOGE("#audioDecodeLoop slp=%ld", sleepMs);
+        if (sleepMs > 0) {
+            mAudioSyncLocker->wait(sleepMs);
+        }*/
+
+    }
+
+    if (mJvm != nullptr) {
+        mJvm->DetachCurrentThread();
+    }
+
+    LOGE("#audioDecodeLoop end");
+}
+
+void FFPlayer::onAudioFrameAvailable(JNIEnv *env, int8_t *pcmBuffer, int bufferSize) {
+    LOGE("#onAudioFrameAvailable: size=%d", bufferSize);
+
+    jbyteArray pcmBytes = env->NewByteArray(bufferSize);
+    env->SetByteArrayRegion(pcmBytes, 0, bufferSize, pcmBuffer);
+
+    if (mJniContext.jniListener != nullptr && mJniContext.audioFrameAvailable != nullptr) {
+        env->CallVoidMethod(mJniContext.jniListener, mJniContext.audioFrameAvailable, pcmBytes);
+    }
+
+    env->DeleteLocalRef(pcmBytes);
 
 }
 
 //endregion
 
 void FFPlayer::packetReadLoop() {
-    LOGE("packetReadLoop: start");
+    LOGE("#packetReadLoop: start");
 
     while (mRunning) {
         AVPacket *packet = av_packet_alloc();
@@ -289,44 +411,66 @@ void FFPlayer::packetReadLoop() {
             continue;
         }
 
-        locker->lock();
-
         bool pushed = false;
         if (packet->stream_index == mVideoDecoder->getStreamIndex()
             && mVideoPacketQueue != nullptr) {
             LOGE("mVideoPacketQueue push, %d", mVideoPacketQueue->size());
+            mVideoQueueLocker->lock();
             int tryTimes = 3;
             while (tryTimes-- > 0 && mRunning) {
                 if (mVideoPacketQueue->push(packet)) {
                     pushed = true;
                     break;
                 }
-                locker->waitWithoutLock(20);
+                mVideoQueueLocker->waitWithoutLock(10);
+            }
+            mVideoQueueLocker->unlock();
+            if (pushed) {
+                mVideoQueueLocker->notify();
+            }
+        } else if (mAudioPacketQueue != nullptr
+                   && mAudioDecoder != nullptr
+                   && packet->stream_index == mAudioDecoder->getStreamIndex()) {
+            LOGE("mAudioPacketQueue push, %d", mAudioPacketQueue->size());
+            mAudioQueueLocker->lock();
+            int tryTimes = 3;
+            while (tryTimes-- > 0 && mRunning) {
+                if (mAudioPacketQueue->push(packet)) {
+                    pushed = true;
+                    break;
+                }
+                mAudioQueueLocker->waitWithoutLock(10);
+            }
+            mAudioQueueLocker->unlock();
+            if (pushed) {
+                mAudioQueueLocker->notify();
             }
         } else {
-            //TODO audio
+            LOGE("unprocessed packet: %d", packet->stream_index);
+            continue;
         }
 
-        locker->unlock();
-        if (pushed) {
-            locker->notify();
-        } else {
-            LOGI("pack push failed");
+        if (!pushed) {
+            LOGI("packet push failed");
             av_packet_free(&packet);
             av_freep(&packet);
         }
 
-        locker->wait(10);
-
     }
 
     if (!mRunning) {
-        locker->lock();
+
+        mVideoQueueLocker->lock();
         mVideoPacketQueue->clear();
-        locker->unlock();
+        mVideoQueueLocker->unlock();
+
+        mAudioQueueLocker->lock();
+        mAudioPacketQueue->clear();
+        mAudioQueueLocker->unlock();
+
     }
 
-    LOGE("packetReadLoop: end");
+    LOGE("#packetReadLoop: end");
 
 }
 
@@ -344,25 +488,25 @@ void FFPlayer::setJNIListenContext(JNIEnv *env, jobject jObj) {
         return;
     }
 
-    jniContext.jniListener = env->NewGlobalRef(jObj);
+    mJniContext.jniListener = env->NewGlobalRef(jObj);
 
     jclass clazz = env->GetObjectClass(jObj);
 
-    jniContext.videoFrameAvailable = env->GetMethodID(clazz,
-                                                      "onVideoFrameAvailable", "([B[B[B)V");
+    mJniContext.videoFrameAvailable = env->GetMethodID(clazz,
+                                                       "onVideoFrameAvailable", "([B[B[B)V");
 
-    jniContext.audioFrameAvailable = env->GetMethodID(clazz,
-                                                      "onAudioFrameAvailable", "([B)V");
+    mJniContext.audioFrameAvailable = env->GetMethodID(clazz,
+                                                       "onAudioFrameAvailable", "([B)V");
 }
 
 void FFPlayer::resetJniListenContext(JNIEnv *env) {
-    if (jniContext.jniListener != nullptr) {
-        jobject jniListener = jniContext.jniListener;
-        jniContext.jniListener = nullptr;
+    if (mJniContext.jniListener != nullptr) {
+        jobject jniListener = mJniContext.jniListener;
+        mJniContext.jniListener = nullptr;
         env->DeleteGlobalRef(jniListener);
     }
-    jniContext.videoFrameAvailable = nullptr;
-    jniContext.audioFrameAvailable = nullptr;
+    mJniContext.videoFrameAvailable = nullptr;
+    mJniContext.audioFrameAvailable = nullptr;
 }
 
 int *FFPlayer::getVideoSize() {
@@ -371,6 +515,7 @@ int *FFPlayer::getVideoSize() {
     }
     return new int[]{mVideoDecoder->getWidth(), mVideoDecoder->getHeight()};
 }
+
 
 //endregion listener
 

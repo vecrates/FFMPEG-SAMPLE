@@ -13,6 +13,7 @@ import androidx.annotation.NonNull;
 import cn.vecrates.ffmpeg.BuildConfig;
 import cn.vecrates.ffmpeg.ffplayer.FFDecodeListener;
 import cn.vecrates.ffmpeg.ffplayer.FFPlayer;
+import cn.vecrates.ffmpeg.ffplayer.PCMPlayer;
 import cn.vecrates.ffmpeg.render.common.GLHandler;
 
 public class VideoDrawer {
@@ -38,9 +39,12 @@ public class VideoDrawer {
     private Handler manageHandler;
 
     private FFPlayer ffPlayer;
+    private PCMPlayer pcmPlayer;
 
     private AbsVideoDrawerProxy drawerProxy;
     private boolean releasableDrawerProxy;
+
+    private DrawerListener drawerListener;
 
     public VideoDrawer() {
         initGLHandler();
@@ -69,14 +73,30 @@ public class VideoDrawer {
         this.drawerProxy.setGLThreadProxy(glThreadProxy);
     }
 
+    public void setDrawerListener(DrawerListener drawerListener) {
+        this.drawerListener = drawerListener;
+    }
+
     public void prepare(String path) {
         managePost(() -> {
             releaseFFDecoder();
             ffPlayer = new FFPlayer();
             ffPlayer.prepare(path);
             ffPlayer.setDecodeListener(ffDecodeListener);
+            initAudioPlayer();
             initDrawer();
+            if (drawerListener != null) {
+                drawerListener.onPrepared();
+            }
         });
+    }
+
+    private void initAudioPlayer() {
+        try {
+            pcmPlayer = new PCMPlayer();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void releaseFFDecoder() {
@@ -214,7 +234,9 @@ public class VideoDrawer {
 
         @Override
         public void onAudioFrameAvailable(byte[] pcmArray) {
-
+            if (pcmPlayer != null) {
+                pcmPlayer.writePcm(pcmArray);
+            }
         }
     };
 
@@ -244,6 +266,14 @@ public class VideoDrawer {
 
     public void release() {
         glPost(() -> {
+            if (ffPlayer != null) {
+                ffPlayer.release();
+                ffPlayer = null;
+            }
+            if (pcmPlayer != null) {
+                pcmPlayer.release();
+                pcmPlayer = null;
+            }
             if (drawerProxy != null && releasableDrawerProxy) {
                 drawerProxy.release();
                 drawerProxy = null;
@@ -255,13 +285,21 @@ public class VideoDrawer {
         });
     }
 
-
     //region control
+
+    @NonNull
+    public Size getVideoSize() {
+        int[] size = ffPlayer.getVideoSize();
+        return new Size(size[0], size[1]);
+    }
 
     public void start() {
         managePost(() -> {
             if (ffPlayer != null) {
                 ffPlayer.start();
+            }
+            if (pcmPlayer != null) {
+                pcmPlayer.start();
             }
         });
     }
@@ -270,6 +308,9 @@ public class VideoDrawer {
         managePost(() -> {
             if (ffPlayer != null) {
                 ffPlayer.stop();
+            }
+            if (pcmPlayer != null) {
+                pcmPlayer.stop();
             }
         });
     }

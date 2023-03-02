@@ -8,10 +8,10 @@
 #include <jni.h>
 #include <string>
 #include <thread>
-#include <android/native_window.h>
 #include "VideoDecoder.h"
 #include "AvPacketQueue.h"
 #include "../util/Locker.h"
+#include "AudioDecoder.h"
 
 struct JniListenContext {
     jobject jniListener;
@@ -55,11 +55,13 @@ public:
 
     void onVideoFrameAvailable(JNIEnv *env, AVFrame *avFrame);
 
+    void onAudioFrameAvailable(JNIEnv *env, int8_t *pcmBuffer, int bufferSize);
+
     void audioDecodeLoop();
 
     void packetReadLoop();
 
-    int* getVideoSize();
+    int *getVideoSize();
 
 private:
 
@@ -67,13 +69,23 @@ private:
 
     void resetJniListenContext(JNIEnv *env);
 
+    void notifyLockers();
+
     JavaVM *mJvm = nullptr;
 
-    Locker *locker = nullptr;
+    Locker *mVideoQueueLocker = nullptr;
+
+    Locker *mVideoSyncLocker = nullptr;
+
+    Locker *mAudioQueueLocker = nullptr;
+
+    Locker *mAudioSyncLocker = nullptr;
 
     AVFormatContext *mAvFormatContext = nullptr;
 
     VideoDecoder *mVideoDecoder = nullptr;
+
+    AudioDecoder *mAudioDecoder = nullptr;
 
     std::thread *mVideoDecodeThread = nullptr;
 
@@ -87,7 +99,7 @@ private:
 
     STATE mState = STATE::IDLE;
 
-    JniListenContext jniContext;
+    JniListenContext mJniContext;
 
     bool mPreparing = false;
 

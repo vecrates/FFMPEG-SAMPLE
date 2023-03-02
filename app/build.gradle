@@ -62,6 +62,8 @@ android {
         pickFirst 'lib/armeabi-v7a/*.so'
     }
 
+    ndkVersion '21.1.6352462'
+
 }
 
 dependencies {

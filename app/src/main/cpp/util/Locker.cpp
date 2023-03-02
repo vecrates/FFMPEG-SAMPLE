@@ -37,7 +37,7 @@ void Locker::waitWithoutLock(long timeMs) {
         struct timespec abs_time{};
         struct timeval now_time{};
         gettimeofday(&now_time, nullptr);
-        int n_sec = now_time.tv_usec * 1000 + (timeMs % 1000) * 1000000l;
+        int n_sec = now_time.tv_usec * 1000 + (timeMs % 1000) * 1000000L;
         abs_time.tv_nsec = n_sec % 1000000000;
         abs_time.tv_sec = now_time.tv_sec + n_sec / 1000000000L + timeMs / 1000L;
         pthread_cond_timedwait(&mCond, &mMutex, &abs_time);

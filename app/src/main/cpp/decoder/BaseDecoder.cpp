@@ -4,13 +4,11 @@
 
 #include "BaseDecoder.h"
 
-#include <utility>
-
 BaseDecoder::BaseDecoder(AVFormatContext *ftx, int streamIndex) {
     this->mAvFormatContext = ftx;
     this->mStreamIndex = streamIndex;
     this->mTimeBase = mAvFormatContext->streams[streamIndex]->time_base;
-    this->mDuration = mAvFormatContext->streams[streamIndex]->duration * av_q2d(mTimeBase);
+    this->mDuration = ptsToUs(mAvFormatContext->streams[streamIndex]->duration);
 }
 
 BaseDecoder::~BaseDecoder() {
@@ -33,10 +31,11 @@ int BaseDecoder::getStreamIndex() {
     return mStreamIndex;
 }
 
-void BaseDecoder::setFrameAvailableListener(std::function<void(AVFrame *)> listener) {
-    this->mFrameAvailableListener = std::move(listener);
-}
-
 long BaseDecoder::getCurrentTimestamp() {
-
+    return mCurrentTimestamp;
 }
+
+long BaseDecoder::ptsToUs(int64_t pts) {
+    return pts * av_q2d(mTimeBase) * 1000000L;
+}
+

@@ -5,10 +5,6 @@ import android.widget.Toast;
 import cn.vecrates.ffmpeg.App;
 
 
-/**
- * @author Vecrates.
- * @describe
- */
 public class ToastUtil {
 
     public static void show(String text) {

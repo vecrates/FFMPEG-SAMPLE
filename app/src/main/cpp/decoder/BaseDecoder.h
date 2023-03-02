@@ -37,29 +37,27 @@ public:
 
     int getStreamIndex();
 
-    void setFrameAvailableListener(std::function<void(AVFrame *)>);
+    long getCurrentTimestamp();
 
-    virtual long getCurrentTimestamp();
+    long ptsToUs(int64_t pts);
 
 protected:
 
     AVFormatContext *mAvFormatContext = nullptr;
 
-    AVCodecContext *mCodecContext = nullptr;
-
-    AVCodec *mVideoCodec = nullptr;
+    AVCodecContext *mAvCodecContext = nullptr;
 
     AVFrame *mAvFrame = nullptr;
 
-    std::function<void(AVFrame *)> mFrameAvailableListener = nullptr;
+    long mCurrentTimestamp; //us
 
-    long mCurrentTimestamp;
+    long mDuration; //us
 
     AVRational mTimeBase{};
 
-    long mDuration{};
-
 private:
+
+    std::function<void(int8_t *pcmBuffer, int bufferSize)> mFrameAvailableListener;
 
     int mStreamIndex = -1;
 

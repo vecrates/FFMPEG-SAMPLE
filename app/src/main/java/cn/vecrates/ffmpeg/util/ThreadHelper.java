@@ -8,16 +8,12 @@ import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-/**
- * Created by chenkehui on 0019 2018/3/19.
- */
-
 public class ThreadHelper {
 
     private static Handler handler;
 
     private final static ExecutorService executor = new ThreadPoolExecutor(5, Integer.MAX_VALUE,
-            2L, TimeUnit.SECONDS, new SynchronousQueue<>()); //峰值6
+            2L, TimeUnit.SECONDS, new SynchronousQueue<>());
 
     public static void runBackground(Runnable runnable) {
         executor.execute(runnable);
