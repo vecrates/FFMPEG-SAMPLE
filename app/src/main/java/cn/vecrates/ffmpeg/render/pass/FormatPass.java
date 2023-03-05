@@ -8,16 +8,20 @@ import java.nio.ByteBuffer;
 
 import cn.vecrates.ffmpeg.render.PassContext;
 import cn.vecrates.ffmpeg.render.common.GLFrameBuffer;
+import cn.vecrates.ffmpeg.render.shader.ShowFilter;
 import cn.vecrates.ffmpeg.render.shader.YUVFilter;
 
 public class FormatPass extends BasePass {
 
-    private GLFrameBuffer glFrameBuffer;
     private YUVFilter yuvFilter;
+    private ShowFilter showFilter;
 
     private ByteBuffer yBuffer;
     private ByteBuffer uBuffer;
     private ByteBuffer vBuffer;
+
+    private int yuvWidth = -1;
+    private int yuvHeight = -1;
 
     /**
      * call on GL
@@ -30,29 +34,53 @@ public class FormatPass extends BasePass {
     @Override
     protected void init() {
         super.init();
-        glFrameBuffer = new GLFrameBuffer();
         yuvFilter = new YUVFilter();
+        showFilter = new ShowFilter();
     }
 
     /**
      * call on gl
      */
-    public void updateYUV(byte[] y, byte[] u, byte[] v) {
-        Log.e("$$$$", "updateYUV: " +
-                "y=" + y.length + " u=" + u.length + " v=" + v.length);
+    public void updateYUV(byte[] y, byte[] u, byte[] v, int width, int height) {
+//        Log.e("$$$$", "updateYUV: " +
+//                "y=" + y.length + " u=" + u.length + " v=" + v.length);
         yBuffer = ByteBuffer.wrap(y);
         uBuffer = ByteBuffer.wrap(u);
         vBuffer = ByteBuffer.wrap(v);
+        yuvWidth = width;
+        yuvHeight = height;
     }
 
     @Override
     public int draw(int textureId, int width, int height) {
 
-        glFrameBuffer.bindFrameBuffer(width, height);
+        if (yBuffer == null) {
+            return textureId;
+        }
+
+        GLFrameBuffer frameBuffer = passContext.nextFrameBuffer();
+        frameBuffer.bindFrameBuffer(yuvWidth, yuvHeight);
+        GLES20.glViewport(0, 0, yuvWidth, yuvHeight);
+        yuvFilter.draw(yBuffer, uBuffer, vBuffer, yuvWidth, yuvHeight);
+        frameBuffer.unBindFrameBuffer();
+        textureId = frameBuffer.getAttachedTexture();
+
+
+        float right = (float) width / yuvWidth;
+        Log.e("!!!!!", "draw: " + right);
+        float[] texCoordinate = new float[]{
+                0.0f, 0.0f,     // 0 lb
+                right, 0.0f,     // 1 rb
+                0.0f, 1.0f,     // 2 lt
+                right, 1.0f      // 3 rt
+        };
+        showFilter.setTexCoordinate(texCoordinate);
+        frameBuffer = passContext.nextFrameBuffer();
+        frameBuffer.bindFrameBuffer(width, height);
         GLES20.glViewport(0, 0, width, height);
-        yuvFilter.draw(yBuffer, uBuffer, vBuffer, width, height);
-        glFrameBuffer.unBindFrameBuffer();
-        textureId = glFrameBuffer.getAttachedTexture();
+        showFilter.draw(textureId, null, null);
+        frameBuffer.unBindFrameBuffer();
+        textureId = frameBuffer.getAttachedTexture();
 
         return textureId;
     }
@@ -60,9 +88,9 @@ public class FormatPass extends BasePass {
     @Override
     public void release() {
         super.release();
-        if (glFrameBuffer != null) {
-            glFrameBuffer.destroyFrameBuffer();
-            glFrameBuffer = null;
+        if (showFilter != null) {
+            showFilter.release();
+            showFilter = null;
         }
         if (yuvFilter != null) {
             yuvFilter.release();

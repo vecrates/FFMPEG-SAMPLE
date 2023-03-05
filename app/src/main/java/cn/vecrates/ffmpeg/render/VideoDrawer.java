@@ -114,7 +114,6 @@ public class VideoDrawer {
             int[] size = ffPlayer.getVideoSize();
             renderSize = new Size(size[0], size[1]);
             notifySizeChanged();
-            Log.e(TAG, "-----initDrawer: " + renderSize.toString());
         });
     }
 
@@ -216,7 +215,7 @@ public class VideoDrawer {
 
     private final FFDecodeListener ffDecodeListener = new FFDecodeListener() {
         @Override
-        public void onVideoFrameAvailable(byte[] y, byte[] u, byte[] v) {
+        public void onVideoFrameAvailable(byte[] y, byte[] u, byte[] v, int width, int height) {
             if (glHandler == null) {
                 return;
             }
@@ -224,7 +223,7 @@ public class VideoDrawer {
             glHandler.clearDrawMessages();
             glHandler.postDrawMessage(() -> {
                 if (drawerProxy != null) {
-                    drawerProxy.updateYUV(y, u, v);
+                    drawerProxy.updateYUV(y, u, v, width, height);
                 }
                 if (glHandler != null) {
                     glHandler.requestRenderSync();

@@ -3,6 +3,7 @@
 //
 
 #include "AudioDecoder.h"
+#include "../util/TimeUtil.h"
 #include <android/log.h>
 
 #define LOGE(...) __android_log_print(ANDROID_LOG_ERROR,"AudioDecoder",__VA_ARGS__)
@@ -117,12 +118,15 @@ int AudioDecoder::resample(AVFrame *avFrame) {
     int outNbSamples = (int) av_rescale_rnd(avFrame->nb_samples, OUT_SAMPLE_RATE,
                                             avFrame->sample_rate, AV_ROUND_UP);
     //第二种写法：+256让空间足够
-    //out_count = (int64_t)avFrame->nb_samples * OUT_SAMPLE_RATE / avFrame->sample_rate + 256;
+//    int outNbSamples = (int64_t) avFrame->nb_samples * OUT_SAMPLE_RATE / avFrame->sample_rate + 256;
 
     //根据通道数、样本数、数据格式，返回数据大小
     int outNbChannels = av_get_channel_layout_nb_channels(OUT_CHANNEL);
-    int outBufferSize = av_samples_get_buffer_size(nullptr, outNbChannels,
-                                                   outNbSamples, OUT_FORMAT, 1);
+    int outBufferSize = av_samples_get_buffer_size(nullptr,
+                                                   outNbChannels,
+                                                   outNbSamples,
+                                                   OUT_FORMAT,
+                                                   1);
     if (outBufferSize < 0) {
         LOGE("#av_samples_get_buffer_size, error=%d", outBufferSize);
         return 0;
@@ -132,9 +136,12 @@ int AudioDecoder::resample(AVFrame *avFrame) {
         mAudioBuffer = (int8_t *) (av_malloc(outBufferSize));
     }
 
-    int finalOutNbSamples = swr_convert(mSwrContext, reinterpret_cast<uint8_t **>(&mAudioBuffer),
-                                        outNbSamples, (const uint8_t **) avFrame->data,
-                                        avFrame->nb_samples);
+    int finalOutNbSamples = swr_convert(mSwrContext,
+                                        reinterpret_cast<uint8_t **>(&mAudioBuffer), // 输出数据的指针
+                                        outNbSamples, //输出单通道的样本数量，不是字节数。单通道的样本数量。
+                                        (const uint8_t **) avFrame->data, //输⼊数据的指针
+                                        avFrame->nb_samples //输⼊的单通道的样本数量
+    );
     if (finalOutNbSamples < 0) {
         LOGE("#swr_convert, error=%d", finalOutNbSamples);
         return 0;
@@ -149,5 +156,4 @@ int AudioDecoder::resample(AVFrame *avFrame) {
 void AudioDecoder::setFrameAvailableListener(std::function<void(int8_t *, int)> listener) {
     this->mFrameAvailableListener = std::move(listener);
 }
-
 

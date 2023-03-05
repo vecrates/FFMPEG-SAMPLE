@@ -14,9 +14,9 @@
 #include "AudioDecoder.h"
 
 struct JniListenContext {
-    jobject jniListener;
-    jmethodID videoFrameAvailable;
-    jmethodID audioFrameAvailable;
+    jobject jniListener = nullptr;
+    jmethodID videoFrameAvailable = nullptr;
+    jmethodID audioFrameAvailable = nullptr;
 };
 
 enum class STATE {
@@ -99,7 +99,7 @@ private:
 
     STATE mState = STATE::IDLE;
 
-    JniListenContext mJniContext;
+    JniListenContext mJniContext{};
 
     bool mPreparing = false;
 

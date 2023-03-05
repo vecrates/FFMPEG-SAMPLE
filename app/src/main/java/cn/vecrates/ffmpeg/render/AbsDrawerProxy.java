@@ -3,13 +3,12 @@ package cn.vecrates.ffmpeg.render;
 import android.opengl.EGLContext;
 import android.util.Size;
 
-import androidx.annotation.CallSuper;
 import androidx.annotation.NonNull;
-import androidx.core.util.Consumer;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import cn.vecrates.ffmpeg.render.common.GLFrameBuffer;
 import cn.vecrates.ffmpeg.render.pass.BasePass;
 
 /**
@@ -27,6 +26,9 @@ public abstract class AbsDrawerProxy {
     protected int viewportWidth;
     protected int viewportHeight;
 
+    private GLFrameBuffer[] frameBuffers;
+    private int frameBufferIndex = 0;
+
     protected final List<BasePass> passes = new ArrayList<>(5);
 
     private IGLThreadProxy glThreadProxy;
@@ -38,6 +40,11 @@ public abstract class AbsDrawerProxy {
     public final void init() {
         if (initialized) {
             return;
+        }
+
+        frameBuffers = new GLFrameBuffer[3];
+        for (int i = 0; i < frameBuffers.length; i++) {
+            frameBuffers[i] = new GLFrameBuffer();
         }
 
         initPasses();
@@ -77,6 +84,11 @@ public abstract class AbsDrawerProxy {
         @Override
         public Size getSurfaceSize() {
             return glThreadProxy != null ? glThreadProxy.getSurfaceSize() : new Size(0, 0);
+        }
+
+        @Override
+        public GLFrameBuffer nextFrameBuffer() {
+            return frameBuffers[frameBufferIndex++ % frameBuffers.length];
         }
 
     };
@@ -147,6 +159,12 @@ public abstract class AbsDrawerProxy {
      */
     public void release() {
         initialized = false;
+        if (frameBuffers != null) {
+            for (GLFrameBuffer frameBuffer : frameBuffers) {
+                frameBuffer.destroyFrameBuffer();
+            }
+            frameBuffers = null;
+        }
         for (BasePass pass : passes) {
             pass.release();
         }

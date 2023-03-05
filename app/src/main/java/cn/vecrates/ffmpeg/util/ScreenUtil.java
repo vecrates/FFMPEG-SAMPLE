@@ -1,6 +1,7 @@
 package cn.vecrates.ffmpeg.util;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.Context;
 import android.util.DisplayMetrics;
 import android.view.WindowManager;
@@ -14,9 +15,6 @@ public class ScreenUtil {
 
     private static int screenHeight;
     private static int screenWidth;
-    private static int stateBarHeight;
-    private static int navBarHeight = -1;
-    public static final float NORMAL_WIDTH_IN = 2.4545455f;
 
     public static int dp2px(float dpValue) {
         final float scale = context.getResources().getDisplayMetrics().density;
@@ -59,5 +57,15 @@ public class ScreenUtil {
         return outMetrics;
     }
 
+    public static void setKeepScreenOn(Activity activity, boolean keepScreenOn) {
+        if (activity == null || activity.getWindow() == null) {
+            return;
+        }
+        if (keepScreenOn) {
+            activity.getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        } else {
+            activity.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        }
+    }
 
 }

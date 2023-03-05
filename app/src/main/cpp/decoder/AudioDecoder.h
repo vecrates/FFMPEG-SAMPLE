@@ -12,6 +12,7 @@ extern "C" { //ffmpeg用c语言的方式编译
 #endif
 
 #include "libswresample/swresample.h"
+#include "libavutil/time.h"
 
 #ifdef __cplusplus
 }
@@ -31,13 +32,8 @@ public:
 
     void flush() override;
 
-    void setFrameAvailableListener(
+    void setFrameAvailableListener(std::function<void(int8_t *pcmBuffer, int bufferSize)> listener);
 
-    std::function<
-    void(int8_t
-    *pcmBuffer,
-    int bufferSize
-    )> listener);
 
 private:
 
@@ -55,12 +51,7 @@ private:
 
     int8_t *mAudioBuffer = nullptr;
 
-    std::function<
-    void(int8_t
-    *pcmBuffer,
-    int bufferSize
-    )>
-    mFrameAvailableListener;
+    std::function<void(int8_t *pcmBuffer, int bufferSize)> mFrameAvailableListener;
 
 };
 

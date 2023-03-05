@@ -49,7 +49,7 @@ protected:
 
     AVFrame *mAvFrame = nullptr;
 
-    long mCurrentTimestamp; //us
+    long mCurrentTimestamp = 0; //us
 
     long mDuration; //us
 

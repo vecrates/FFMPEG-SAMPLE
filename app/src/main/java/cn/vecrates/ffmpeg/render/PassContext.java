@@ -5,6 +5,8 @@ import android.util.Size;
 
 import androidx.annotation.NonNull;
 
+import cn.vecrates.ffmpeg.render.common.GLFrameBuffer;
+
 public interface PassContext {
 
     void postDraw(Runnable runnable);
@@ -15,5 +17,7 @@ public interface PassContext {
 
     @NonNull
     Size getSurfaceSize();
+
+    GLFrameBuffer nextFrameBuffer();
 
 }

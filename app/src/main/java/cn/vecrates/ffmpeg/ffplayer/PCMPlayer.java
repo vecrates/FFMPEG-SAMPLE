@@ -1,5 +1,7 @@
 package cn.vecrates.ffmpeg.ffplayer;
 
+import static android.media.AudioTrack.WRITE_NON_BLOCKING;
+
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioTrack;

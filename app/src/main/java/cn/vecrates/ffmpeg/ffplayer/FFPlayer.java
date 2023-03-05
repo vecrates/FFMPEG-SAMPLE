@@ -4,8 +4,6 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 
-import java.util.Arrays;
-
 public class FFPlayer {
 
     private static final String TAG = "FFPlayer";
@@ -90,16 +88,16 @@ public class FFPlayer {
 
     private final JniListener jniListener = new JniListener() {
         @Override
-        public void onVideoFrameAvailable(byte[] y, byte[] u, byte[] v) {
-            Log.e(TAG, "onVideoFrameAvailable: " + y.length);
+        public void onVideoFrameAvailable(byte[] y, byte[] u, byte[] v, int width, int height) {
+            Log.e(TAG, "java_onVideoFrameAvailable: " + y.length);
             if (decodeListener != null) {
-                decodeListener.onVideoFrameAvailable(y, u, v);
+                decodeListener.onVideoFrameAvailable(y, u, v, width, height);
             }
         }
 
         @Override
         public void onAudioFrameAvailable(byte[] pcmArray) {
-            Log.e(TAG, "onAudioFrameAvailable: pcm=" + Arrays.toString(pcmArray));
+            Log.e(TAG, "java_onAudioFrameAvailable: pcm=" + pcmArray.length);
             if (decodeListener != null) {
                 decodeListener.onAudioFrameAvailable(pcmArray);
             }
@@ -124,7 +122,7 @@ public class FFPlayer {
 
 
     private interface JniListener {
-        void onVideoFrameAvailable(byte[] y, byte[] u, byte[] v);
+        void onVideoFrameAvailable(byte[] y, byte[] u, byte[] v, int width, int height);
 
         void onAudioFrameAvailable(byte[] pcmArray);
     }

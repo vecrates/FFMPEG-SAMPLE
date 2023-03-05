@@ -43,7 +43,7 @@ public class MainActivity extends AppCompatActivity {
 
         initView();
 
-        initPlayer();
+        ScreenUtil.setKeepScreenOn(this, true);
 
     }
 
@@ -52,7 +52,7 @@ public class MainActivity extends AppCompatActivity {
         binding.tvPlay.setOnClickListener(this::onClickPlay);
     }
 
-    private void initPlayer() {
+    private void updatePlayer(String path) {
         if (videoDrawer != null) {
             videoDrawer.release();
             videoDrawer = null;
@@ -60,9 +60,6 @@ public class MainActivity extends AppCompatActivity {
         videoDrawer = new VideoDrawer();
         videoDrawer.setSurfaceView(binding.svVideo);
         videoDrawer.setDrawerProxy(new VideoDrawerProxy(), true);
-    }
-
-    private void updatePlayer(String path) {
         videoDrawer.prepare(path);
         videoDrawer.setDrawerListener(drawerListener);
     }
