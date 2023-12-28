@@ -474,7 +474,7 @@ void av_packet_free(AVPacket **pkt);
  * Initialize optional fields of a packet with default values.
  *
  * Note, this does not touch the data and size members, which have to be
- * initialized separately.
+ * mInitialized separately.
  *
  * @param pkt packet
  *
@@ -517,7 +517,7 @@ int av_grow_packet(AVPacket *pkt, int grow_by);
 /**
  * Initialize a reference-counted packet from av_malloc()ed data.
  *
- * @param pkt packet to be initialized. This function will set the data, size,
+ * @param pkt packet to be mInitialized. This function will set the data, size,
  *        and buf fields, all others are left untouched.
  * @param data Data allocated by av_malloc() to be used as packet data. If this
  *        function returns successfully, the data is owned by the underlying AVBuffer.

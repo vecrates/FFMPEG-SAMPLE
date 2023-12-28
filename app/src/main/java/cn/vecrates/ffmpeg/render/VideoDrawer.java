@@ -11,9 +11,9 @@ import android.view.SurfaceView;
 import androidx.annotation.NonNull;
 
 import cn.vecrates.ffmpeg.BuildConfig;
-import cn.vecrates.ffmpeg.ffplayer.FFDecodeListener;
-import cn.vecrates.ffmpeg.ffplayer.FFPlayer;
-import cn.vecrates.ffmpeg.ffplayer.PCMPlayer;
+import cn.vecrates.ffmpeg.ffmpeg.FFDecodeListener;
+import cn.vecrates.ffmpeg.ffmpeg.FFPlayer;
+import cn.vecrates.ffmpeg.ffmpeg.PCMPlayer;
 import cn.vecrates.ffmpeg.render.common.GLHandler;
 
 public class VideoDrawer {

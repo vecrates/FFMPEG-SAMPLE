@@ -204,7 +204,7 @@ int64_t av_compare_mod(uint64_t a, uint64_t b, uint64_t mod);
  *
  * The `last` parameter is a mState variable that must be preserved for all
  * subsequent calls for the same stream. For the first call, `*last` should be
- * initialized to #AV_NOPTS_VALUE.
+ * mInitialized to #AV_NOPTS_VALUE.
  *
  * @param[in]     in_tb    Input time base
  * @param[in]     in_ts    Input timestamp

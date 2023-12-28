@@ -1318,7 +1318,7 @@ typedef struct AVFormatContext {
      * input or output URL. Unlike the old filename field, this field has no
      * length restriction.
      *
-     * - demuxing: set by avformat_open_input(), initialized to an empty
+     * - demuxing: set by avformat_open_input(), mInitialized to an empty
      *             string if url parameter was NULL in avformat_open_input().
      * - muxing: may be set by the caller before calling avformat_write_header()
      *           (or avformat_init_output() if that is called first) to a string
@@ -1454,7 +1454,7 @@ typedef struct AVFormatContext {
     /**
      * Number of chapters in AVChapter array.
      * When muxing, chapters are normally written in the file header,
-     * so nb_chapters should normally be initialized before write_header
+     * so nb_chapters should normally be mInitialized before write_header
      * is called. Some muxers (e.g. mov and mkv) can also write chapters
      * in the trailer.  To write chapters in the trailer, nb_chapters
      * must be zero when write_header is called and non-zero when
@@ -2057,7 +2057,7 @@ const AVClass *avformat_get_class(void);
  *
  * @param s media file handle
  * @param c If non-NULL, the AVCodecContext corresponding to the new stream
- * will be initialized to use this codec. This is needed for e.g. codec-specific
+ * will be mInitialized to use this codec. This is needed for e.g. codec-specific
  * defaults to be set, so codec should be provided if it is known.
  *
  * @return newly created stream or NULL on error.
@@ -2325,7 +2325,7 @@ int av_find_best_stream(AVFormatContext *ic,
  * @return 0 if OK, < 0 on error or end of file. On error, pkt will be blank
  *         (as if it came from av_packet_alloc()).
  *
- * @note pkt will be initialized, so it may be uninitialized, but it must not
+ * @note pkt will be mInitialized, so it may be uninitialized, but it must not
  *       contain data that needs to be freed.
  */
 int av_read_frame(AVFormatContext *s, AVPacket *pkt);
@@ -2424,8 +2424,8 @@ void avformat_close_input(AVFormatContext **s);
  * @{
  */
 
-#define AVSTREAM_INIT_IN_WRITE_HEADER 0 ///< stream parameters initialized in avformat_write_header
-#define AVSTREAM_INIT_IN_INIT_OUTPUT  1 ///< stream parameters initialized in avformat_init_output
+#define AVSTREAM_INIT_IN_WRITE_HEADER 0 ///< stream parameters mInitialized in avformat_write_header
+#define AVSTREAM_INIT_IN_INIT_OUTPUT  1 ///< stream parameters mInitialized in avformat_init_output
 
 /**
  * Allocate the stream private data and write the stream header to
@@ -2438,8 +2438,8 @@ void avformat_close_input(AVFormatContext **s);
  *                 On return this parameter will be destroyed and replaced with a dict containing
  *                 options that were not found. May be NULL.
  *
- * @return AVSTREAM_INIT_IN_WRITE_HEADER on success if the codec had not already been fully initialized in avformat_init,
- *         AVSTREAM_INIT_IN_INIT_OUTPUT  on success if the codec had already been fully initialized in avformat_init,
+ * @return AVSTREAM_INIT_IN_WRITE_HEADER on success if the codec had not already been fully mInitialized in avformat_init,
+ *         AVSTREAM_INIT_IN_INIT_OUTPUT  on success if the codec had already been fully mInitialized in avformat_init,
  *         negative AVERROR on failure.
  *
  * @see av_opt_find, av_dict_set, avio_open, av_oformat_next, avformat_init_output.
@@ -2461,7 +2461,7 @@ int avformat_write_header(AVFormatContext *s, AVDictionary **options);
  *                 options that were not found. May be NULL.
  *
  * @return AVSTREAM_INIT_IN_WRITE_HEADER on success if the codec requires avformat_write_header to fully initialize,
- *         AVSTREAM_INIT_IN_INIT_OUTPUT  on success if the codec has been fully initialized,
+ *         AVSTREAM_INIT_IN_INIT_OUTPUT  on success if the codec has been fully mInitialized,
  *         negative AVERROR on failure.
  *
  * @see av_opt_find, av_dict_set, avio_open, av_oformat_next, avformat_write_header.

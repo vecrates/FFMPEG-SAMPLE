@@ -58,14 +58,14 @@ bool FFPlayer::prepare(JNIEnv *env, const std::string &file) {
                                   nullptr, nullptr);
     if (ret != 0) {
         LOGE("prepare: avformat_open_input() failed, "
-             "ret=%d error=%s file=%s", ret, av_err2str(ret), file.c_str());
+             "error=%s file=%s", av_err2str(ret), file.c_str());
         return false;
     }
 
     ret = avformat_find_stream_info(mAvFormatContext, nullptr);
     if (ret < 0) {
         LOGE("prepare: avformat_find_stream_info() failed, "
-             "ret=%d error=%s file=%s", ret, av_err2str(ret), file.c_str());
+             "error=%s file=%s", av_err2str(ret), file.c_str());
         return false;
     }
 
@@ -337,6 +337,8 @@ void FFPlayer::videoDecodeLoop() {
             mVideoSyncLocker->wait(sleepMs);
         }
 
+        //todo 丢帧，注意I帧
+
     }
 
     if (mJvm != nullptr) {
@@ -439,6 +441,9 @@ void FFPlayer::audioDecodeLoop() {
 
         mAudioDecoder->decode(packet);
 
+        av_packet_free(&packet);
+        av_freep(&packet);
+
         if (startSyncTimestamp < 0) {
             startSyncTimestamp = TimeUtil::timestampMicroSec();;
         }
@@ -461,7 +466,7 @@ void FFPlayer::audioDecodeLoop() {
     LOGE("#audioDecodeLoop end");
 }
 
-void FFPlayer::onAudioFrameAvailable(JNIEnv *env, int8_t *pcmBuffer, int bufferSize) {
+void FFPlayer::onAudioFrameAvailable(JNIEnv *env, int8_t *pcmBuffer, int bufferSize) const {
     LOGE("#onAudioFrameAvailable: size=%d", bufferSize);
 
     jbyteArray pcmBytes = env->NewByteArray(bufferSize);

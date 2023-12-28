@@ -55,7 +55,7 @@ public:
 
     void onVideoFrameAvailable(JNIEnv *env, AVFrame *avFrame);
 
-    void onAudioFrameAvailable(JNIEnv *env, int8_t *pcmBuffer, int bufferSize);
+    void onAudioFrameAvailable(JNIEnv *env, int8_t *pcmBuffer, int bufferSize) const;
 
     void audioDecodeLoop();
 

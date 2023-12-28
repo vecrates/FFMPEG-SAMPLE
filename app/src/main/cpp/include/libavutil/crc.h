@@ -77,7 +77,7 @@ typedef enum {
 int av_crc_init(AVCRC *ctx, int le, int bits, uint32_t poly, int ctx_size);
 
 /**
- * Get an initialized standard CRC table.
+ * Get an mInitialized standard CRC table.
  * @param crc_id ID of a standard CRC
  * @return a pointer to the CRC table or NULL on failure
  */

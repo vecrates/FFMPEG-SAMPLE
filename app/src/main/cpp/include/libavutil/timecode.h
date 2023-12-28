@@ -58,7 +58,7 @@ int av_timecode_adjust_ntsc_framenum2(int framenum, int fps);
 /**
  * Convert frame number to SMPTE 12M binary representation.
  *
- * @param tc       timecode data correctly initialized
+ * @param tc       timecode data correctly mInitialized
  * @param framenum frame number
  * @return         the SMPTE binary representation
  *
@@ -99,7 +99,7 @@ uint32_t av_timecode_get_smpte(AVRational rate, int drop, int hh, int mm, int ss
  * Load timecode string in buf.
  *
  * @param buf      destination buffer, must be at least AV_TIMECODE_STR_SIZE long
- * @param tc       timecode data correctly initialized
+ * @param tc       timecode data correctly mInitialized
  * @param framenum frame number
  * @return         the buf parameter
  *

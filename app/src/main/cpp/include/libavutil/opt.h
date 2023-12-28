@@ -159,7 +159,7 @@
  *      and child_class_iterate() are needed. The distinction is that child_next()
  *      iterates over actually existing objects, while child_class_iterate()
  *      iterates over all possible child classes. E.g. if an AVCodecContext
- *      was initialized to use a codec which has private options, then its
+ *      was mInitialized to use a codec which has private options, then its
  *      child_next() will return AVCodecContext.priv_data and finish
  *      iterating. OTOH child_class_iterate() on AVCodecContext.av_class will
  *      iterate over all available codecs with private options.
@@ -197,7 +197,7 @@
  * get all options that may potentially exist on the struct and its children
  * (e.g.  when constructing documentation). In that case you should call
  * av_opt_child_class_iterate() recursively on the parent struct's AVClass.  The
- * second case is when you have an already initialized struct with all its
+ * second case is when you have an already mInitialized struct with all its
  * children and you want to get all options that can be actually written or read
  * from it. In that case you should call av_opt_child_next() recursively (and
  * av_opt_next() on each result).

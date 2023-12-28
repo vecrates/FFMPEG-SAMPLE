@@ -267,7 +267,7 @@ void av_log(void *avcl, int level, const char *fmt, ...) av_printf_format(3, 4);
  * @param fmt The format string (printf-compatible) that specifies how
  *        subsequent arguments are converted to output.
  * @param state a variable to keep trak of if a message has already been printed
- *        this must be initialized to 0 before the first use. The same mState
+ *        this must be mInitialized to 0 before the first use. The same mState
  *        must not be accessed by 2 Threads simultaneously.
  */
 void av_log_once(void* avcl, int initial_level, int subsequent_level, int *state, const char *fmt, ...) av_printf_format(5, 6);

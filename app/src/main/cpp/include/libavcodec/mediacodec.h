@@ -60,7 +60,7 @@ AVMediaCodecContext *av_mediacodec_alloc_context(void);
 int av_mediacodec_default_init(AVCodecContext *avctx, AVMediaCodecContext *ctx, void *surface);
 
 /**
- * This function must be called to free the MediaCodec context initialized with
+ * This function must be called to free the MediaCodec context mInitialized with
  * av_mediacodec_default_init().
  *
  * @param avctx codec context

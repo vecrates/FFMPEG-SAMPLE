@@ -283,7 +283,7 @@ int av_hwdevice_ctx_init(AVBufferRef *ref);
  * manually and then wrap it in an AVHWDeviceContext using
  * av_hwdevice_ctx_alloc()/av_hwdevice_ctx_init().
  *
- * The returned context is already initialized and ready for use, the caller
+ * The returned context is already mInitialized and ready for use, the caller
  * should not call av_hwdevice_ctx_init() on it. The user_opaque/free fields of
  * the created AVHWDeviceContext are set by this function and should not be
  * touched by the caller.

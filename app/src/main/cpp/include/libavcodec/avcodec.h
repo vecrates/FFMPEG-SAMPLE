@@ -1203,7 +1203,7 @@ typedef struct AVCodecContext {
      */
     enum AVSampleFormat sample_fmt;  ///< sample format
 
-    /* The following data should not be initialized. */
+    /* The following data should not be mInitialized. */
     /**
      * Number of samples per channel in an audio frame.
      *
@@ -2774,7 +2774,7 @@ void avcodec_register_all(void);
  * @param codec if non-NULL, allocate private data and initialize defaults
  *              for the given codec. It is illegal to then call avcodec_open2()
  *              with a different codec.
- *              If NULL, then the codec-specific defaults won't be initialized,
+ *              If NULL, then the codec-specific defaults won't be mInitialized,
  *              which may result in suboptimal default settings (this is
  *              important mainly for encoders, e.g. libx264).
  *
@@ -2828,7 +2828,7 @@ const AVClass *avcodec_get_subtitle_rect_class(void);
  * unopened, i.e. you are required to call avcodec_open2() before you
  * can use this AVCodecContext to decode/encode video/audio data.
  *
- * @param dest target codec context, should be initialized with
+ * @param dest target codec context, should be mInitialized with
  *             avcodec_alloc_context3(NULL), but otherwise uninitialized
  * @param src source codec context
  * @return AVERROR() on error (e.g. memory allocation error), 0 on success
@@ -3264,7 +3264,7 @@ int avcodec_receive_packet(AVCodecContext *avctx, AVPacket *avpkt);
  * a helper for mPreparing a AVHWFramesContext for AVCodecContext.hw_frames_ctx.
  * This API is for decoding with certain hardware acceleration modes/APIs only.
  *
- * The returned AVHWFramesContext is not initialized. The caller must do this
+ * The returned AVHWFramesContext is not mInitialized. The caller must do this
  * with av_hwframe_ctx_init().
  *
  * Calling this function is not a requirement, but makes it simpler to avoid
@@ -3300,7 +3300,7 @@ int avcodec_receive_packet(AVCodecContext *avctx, AVPacket *avpkt);
  *   get_format call.
  * - It is perfectly possible to call this function without actually using
  *   the resulting AVHWFramesContext. One use-case might be trying to reuse a
- *   previously initialized AVHWFramesContext, and calling this API function
+ *   previously mInitialized AVHWFramesContext, and calling this API function
  *   only to test whether the required frame parameters have changed.
  * - Fields that use dynamically allocated values of any kind must not be set
  *   by the user unless setting them is explicitly allowed by the documentation.
@@ -3419,7 +3419,7 @@ typedef struct AVCodecParserContext {
 
     /**
      * Set by parser to 1 for key frames and 0 for non-key frames.
-     * It is initialized to -1, so if the parser doesn't set this flag,
+     * It is mInitialized to -1, so if the parser doesn't set this flag,
      * old-style fallback using AV_PICTURE_TYPE_I picture type as key frames
      * will be used.
      */
@@ -4077,13 +4077,13 @@ const AVBitStreamFilter *av_bsf_next(void **opaque);
  * AV_INPUT_BUFFER_PADDING_SIZE at the end which will always be 0.
  *
  * In addition the whole buffer will initially and after resizes
- * be 0-initialized so that no uninitialized data will ever appear.
+ * be 0-mInitialized so that no uninitialized data will ever appear.
  */
 void av_fast_padded_malloc(void *ptr, unsigned int *size, size_t min_size);
 
 /**
  * Same behaviour av_fast_padded_malloc except that buffer will always
- * be 0-initialized after call.
+ * be 0-mInitialized after call.
  */
 void av_fast_padded_mallocz(void *ptr, unsigned int *size, size_t min_size);
 

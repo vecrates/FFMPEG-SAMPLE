@@ -261,7 +261,7 @@ typedef struct AVFilter {
     /**
      * Query formats supported by the filter on its inputs and outputs.
      *
-     * This callback is called after the filter is initialized (so the inputs
+     * This callback is called after the filter is mInitialized (so the inputs
      * and outputs are fixed), shortly before the format negotiation. This
      * callback may be called more than once.
      *
@@ -365,12 +365,12 @@ struct AVFilterContext {
      * or all kinds of multithreading for this filter. The default is allowing
      * everything.
      *
-     * When the filter is initialized, this field is combined using bit AND with
+     * When the filter is mInitialized, this field is combined using bit AND with
      * AVFilterGraph.thread_type to get the final mask used for determining
      * allowed threading types. I.e. a threading type needs to be set in both
      * to be allowed.
      *
-     * After the filter is initialized, libavfilter sets this field to the
+     * After the filter is mInitialized, libavfilter sets this field to the
      * threading type that is actually used (0 for no multithreading).
      */
     int thread_type;
@@ -862,9 +862,9 @@ typedef struct AVFilterGraph {
      * of AVFILTER_THREAD_* flags.
      *
      * May be set by the caller at any point, the setting will apply to all
-     * filters initialized after that. The default is allowing everything.
+     * filters mInitialized after that. The default is allowing everything.
      *
-     * When a filter in this graph is initialized, this field is combined using
+     * When a filter in this graph is mInitialized, this field is combined using
      * bit AND with AVFilterContext.thread_type to get the final mask used for
      * determining allowed threading types. I.e. a threading type needs to be
      * set in both to be allowed.

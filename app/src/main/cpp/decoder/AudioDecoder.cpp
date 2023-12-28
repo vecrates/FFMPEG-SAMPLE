@@ -79,12 +79,11 @@ bool AudioDecoder::init() {
     mAvFrame = av_frame_alloc();
 
     return true;
-
 }
 
 void AudioDecoder::decode(AVPacket *packet) {
     int ret = avcodec_send_packet(mAvCodecContext, packet);
-    if (ret < 0 && ret != AVERROR(ret)) {
+    if (ret < 0 && ret != AVERROR(EAGAIN)) {
         LOGE("#avcodec_send_packet, error=%d", ret);
         return;
     }
@@ -118,7 +117,7 @@ int AudioDecoder::resample(AVFrame *avFrame) {
     int outNbSamples = (int) av_rescale_rnd(avFrame->nb_samples, OUT_SAMPLE_RATE,
                                             avFrame->sample_rate, AV_ROUND_UP);
     //第二种写法：+256让空间足够
-//    int outNbSamples = (int64_t) avFrame->nb_samples * OUT_SAMPLE_RATE / avFrame->sample_rate + 256;
+    //int outNbSamples = (int64_t) avFrame->nb_samples * OUT_SAMPLE_RATE / avFrame->sample_rate + 256;
 
     //根据通道数、样本数、数据格式，返回数据大小
     int outNbChannels = av_get_channel_layout_nb_channels(OUT_CHANNEL);

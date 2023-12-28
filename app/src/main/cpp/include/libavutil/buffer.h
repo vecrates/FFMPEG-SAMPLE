@@ -112,7 +112,7 @@ AVBufferRef *av_buffer_alloc(size_t size);
 #endif
 
 /**
- * Same as av_buffer_alloc(), except the returned buffer will be initialized
+ * Same as av_buffer_alloc(), except the returned buffer will be mInitialized
  * to zero.
  */
 #if FF_API_BUFFER_SIZE_T

@@ -11,7 +11,7 @@ import cn.vecrates.ffmpeg.render.util.MathUtil;
 
 public class DisplayPass extends BasePass {
 
-    private ShowFilter showFilter;
+    private  ShowFilter showFilter;
 
     public DisplayPass(@NonNull PassContext passContext) {
         super(passContext);

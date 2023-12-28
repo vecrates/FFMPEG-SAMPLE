@@ -67,7 +67,6 @@ public class FormatPass extends BasePass {
 
 
         float right = (float) width / yuvWidth;
-        Log.e("!!!!!", "draw: " + right);
         float[] texCoordinate = new float[]{
                 0.0f, 0.0f,     // 0 lb
                 right, 0.0f,     // 1 rb

@@ -86,7 +86,7 @@ typedef struct AVCodecParameters {
     /**
      * The average bitrate of the encoded data (in bits per second).
      */
-    int64_t bit_rate;
+        int64_t bit_rate;
 
     /**
      * The number of bits per sample in the codedwords.

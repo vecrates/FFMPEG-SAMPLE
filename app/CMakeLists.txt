@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.4.1)
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+
 set(CPP_DIR ${CMAKE_SOURCE_DIR}/src/main/cpp)
 set(SO_LIB ${CMAKE_SOURCE_DIR}/src/main/jniLibs/${ANDROID_ABI})
 
@@ -60,12 +62,12 @@ file(GLOB_RECURSE FF_PLAYER_SRC
         ${CPP_DIR}/*.h
         )
 add_library(
-        ffplayer
+        ffmpeg
         SHARED
         ${FF_PLAYER_SRC}
 )
 target_link_libraries(
-        ffplayer
+        ffmpeg
 
         log
         android
@@ -78,5 +80,4 @@ target_link_libraries(
         avutil
         swresample
         swscale
-
 )

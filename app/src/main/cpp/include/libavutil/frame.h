@@ -876,7 +876,7 @@ int av_frame_make_writable(AVFrame *frame);
 /**
  * Copy the frame data from src to dst.
  *
- * This function does not allocate anything, dst must be already initialized and
+ * This function does not allocate anything, dst must be already mInitialized and
  * allocated with the same parameters as src.
  *
  * This function only copies the frame data (i.e. the contents of the data /

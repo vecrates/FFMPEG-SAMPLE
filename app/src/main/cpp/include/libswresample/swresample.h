@@ -70,7 +70,7 @@
  *                       NULL);                // log_ctx
  * @endcode
  *
- * Once all values have been set, it must be initialized with swr_init(). If
+ * Once all values have been set, it must be mInitialized with swr_init(). If
  * you need to change the conversion parameters, you can change the parameters
  * using @ref AVOptions, as described above in the first example; or by using
  * swr_alloc_set_opts(), but with the first argument the allocated context.
@@ -219,11 +219,11 @@ struct SwrContext *swr_alloc(void);
 int swr_init(struct SwrContext *s);
 
 /**
- * Check whether an swr context has been initialized or not.
+ * Check whether an swr context has been mInitialized or not.
  *
  * @param[in]       s Swr context to check
  * @see swr_init()
- * @return positive if it has been initialized, 0 if not initialized
+ * @return positive if it has been mInitialized, 0 if not mInitialized
  */
 int swr_is_initialized(struct SwrContext *s);
 
@@ -317,7 +317,7 @@ int swr_convert(struct SwrContext *s, uint8_t **out, int out_count,
  *              in this case the output timestamps will match output sample numbers.
  *              See ffmpeg-resampler(1) for the two modes of compensation.
  *
- * @param s[in]     initialized Swr context
+ * @param s[in]     mInitialized Swr context
  * @param pts[in]   timestamp for the next input sample, INT64_MIN if unknown
  * @see swr_set_compensation(), swr_drop_output(), and swr_inject_silence() are
  *      function used internally for timestamp compensation.
@@ -338,7 +338,7 @@ int64_t swr_next_pts(struct SwrContext *s, int64_t pts);
  * Activate resampling compensation ("soft" compensation). This function is
  * internally called when needed in swr_next_pts().
  *
- * @param[in,out] s             allocated Swr context. If it is not initialized,
+ * @param[in,out] s             allocated Swr context. If it is not mInitialized,
  *                              or SWR_FLAG_RESAMPLE is not set, swr_init() is
  *                              called with the flag set.
  * @param[in]     sample_delta  delta in PTS per sample
@@ -355,7 +355,7 @@ int swr_set_compensation(struct SwrContext *s, int sample_delta, int compensatio
 /**
  * Set a customized input channel mapping.
  *
- * @param[in,out] s           allocated Swr context, not yet initialized
+ * @param[in,out] s           allocated Swr context, not yet mInitialized
  * @param[in]     channel_map customized input channel mapping (array of channel
  *                            indexes, -1 for a muted channel)
  * @return >= 0 on success, or AVERROR error code in case of failure.
@@ -395,7 +395,7 @@ int swr_build_matrix(uint64_t in_layout, uint64_t out_layout,
 /**
  * Set a customized remix matrix.
  *
- * @param s       allocated Swr context, not yet initialized
+ * @param s       allocated Swr context, not yet mInitialized
  * @param matrix  remix coefficients; matrix[i + stride * o] is
  *                the weight of input channel i in output channel o
  * @param stride  offset between lines of the matrix

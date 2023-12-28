@@ -121,7 +121,7 @@ struct AVHashContext;
  *
  * @return  >= 0 for success, a negative error code for failure
  *
- * @note The context is not initialized after a call to this function; you must
+ * @note The context is not mInitialized after a call to this function; you must
  * call av_hash_init() to do so.
  */
 int av_hash_alloc(struct AVHashContext **ctx, const char *name);
