@@ -8,6 +8,8 @@
 #include "decoder/FFPlayer.h"
 #include "tool/AudioMixer.h"
 #include "util/StringUtil.h"
+#include "encoder/FFEncoder.h"
+
 
 /*************FFPlayer************/
 
@@ -134,3 +136,59 @@ Java_cn_vecrates_ffmpeg_ffmpeg_AudioMixer_readFrame(JNIEnv *env, jobject instanc
 
 
 /*************AudioMixer end************/
+extern "C"
+JNIEXPORT jlong JNICALL
+Java_cn_vecrates_ffmpeg_ffmpeg_FFEncoder_nativeCreate(JNIEnv *env, jobject instance) {
+    auto *ffEncoder = new FFEncoder();
+    return (jlong) ffEncoder;
+}
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_cn_vecrates_ffmpeg_ffmpeg_FFEncoder_nativeDestroy(JNIEnv *env, jobject instance,
+                                                       jlong obj) {
+    auto *ffEncoder = (FFEncoder *) obj;
+    ffEncoder->reset();
+    delete ffEncoder;
+}
+
+extern "C"
+JNIEXPORT jboolean JNICALL
+Java_cn_vecrates_ffmpeg_ffmpeg_FFEncoder_nativeInit(JNIEnv *env, jobject instance,
+                                                    jlong obj,
+                                                    jstring srcFile,
+                                                    jstring outFile) {
+    const char *srcPath_ = env->GetStringUTFChars(srcFile, 0);
+    const char *outPath_ = env->GetStringUTFChars(outFile, 0);
+    auto *ffEncoder = (FFEncoder *) obj;
+    bool result = ffEncoder->init(env, srcPath_, outPath_);
+    env->ReleaseStringUTFChars(srcFile, srcPath_);
+    env->ReleaseStringUTFChars(outFile, outPath_);
+    return result;
+}
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_cn_vecrates_ffmpeg_ffmpeg_FFEncoder_nativeStart(JNIEnv *env, jobject instance,
+                                                     jlong obj) {
+    auto *ffEncoder = (FFEncoder *) obj;
+    ffEncoder->start();
+}
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_cn_vecrates_ffmpeg_ffmpeg_FFEncoder_nativeStop(JNIEnv *env, jobject instance,
+                                                    jlong obj) {
+    auto *ffEncoder = (FFEncoder *) obj;
+    ffEncoder->stop();
+}
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_cn_vecrates_ffmpeg_ffmpeg_FFEncoder_nativeReset(JNIEnv *env, jobject instance,
+                                                     jlong obj) {
+    auto *ffEncoder = (FFEncoder *) obj;
+    ffEncoder->reset();
+}
+
+/*************FFEncoder************/

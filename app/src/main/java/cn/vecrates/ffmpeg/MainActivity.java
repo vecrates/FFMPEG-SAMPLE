@@ -1,30 +1,12 @@
 package cn.vecrates.ffmpeg;
 
 import android.content.Intent;
-import android.content.pm.ActivityInfo;
-import android.net.Uri;
 import android.os.Bundle;
-import android.util.Log;
-import android.util.Size;
-import android.view.View;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.constraintlayout.widget.ConstraintLayout;
-
-import com.zhihu.matisse.Matisse;
-import com.zhihu.matisse.MimeType;
-import com.zhihu.matisse.engine.impl.GlideEngine;
-
-import java.util.List;
 
 import cn.vecrates.ffmpeg.databinding.ActivityMainBinding;
-import cn.vecrates.ffmpeg.ffmpeg.AudioMixControl;
-import cn.vecrates.ffmpeg.render.DrawerListener;
 import cn.vecrates.ffmpeg.render.VideoDrawer;
-import cn.vecrates.ffmpeg.render.VideoDrawerProxy;
-import cn.vecrates.ffmpeg.util.ScreenUtil;
-import cn.vecrates.ffmpeg.util.ThreadHelper;
-import cn.vecrates.ffmpeg.util.UriUtil;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -52,6 +34,11 @@ public class MainActivity extends AppCompatActivity {
 
         binding.tvAudioMixer.setOnClickListener(v -> {
             Intent intent = new Intent(this, AudioMixerActivity.class);
+            startActivity(intent);
+        });
+
+        binding.tvTranscode.setOnClickListener(v -> {
+            Intent intent = new Intent(this, TranscodeActivity.class);
             startActivity(intent);
         });
 

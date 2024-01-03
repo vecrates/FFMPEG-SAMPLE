@@ -4,7 +4,7 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.util.Log;
 
-import cn.vecrates.ffmpeg.manager.AudioManager;
+import cn.vecrates.ffmpeg.manager.MediaManager;
 
 public class AudioMixControl {
 
@@ -31,8 +31,8 @@ public class AudioMixControl {
     public void init() {
         handler.post(() -> {
             audioMixer = new AudioMixer();
-            audioMixer.addAudio(AudioManager.getAudioDir() + "/1.mp3");
-            audioMixer.addAudio(AudioManager.getAudioDir() + "/2.mp3");
+            audioMixer.addAudio(MediaManager.getMediaDir() + "/1.mp3");
+            audioMixer.addAudio(MediaManager.getMediaDir() + "/2.mp3");
 //            audioMixer.addAudio(AudioManager.getAudioDir() + "/4.wav");
 //            audioMixer.addAudio(AudioManager.getAudioDir() + "/4.wav");
 //            audioMixer.addAudio(AudioManager.getAudioDir() + "/4.wav");

@@ -219,7 +219,6 @@ public class VideoDrawer {
             if (glHandler == null) {
                 return;
             }
-            Log.e(TAG, "----->onVideoFrameAvailable: ");
             glHandler.clearDrawMessages();
             glHandler.postDrawMessage(() -> {
                 if (drawerProxy != null) {

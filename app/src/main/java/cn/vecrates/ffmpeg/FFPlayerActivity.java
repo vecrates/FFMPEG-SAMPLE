@@ -1,8 +1,5 @@
 package cn.vecrates.ffmpeg;
 
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.constraintlayout.widget.ConstraintLayout;
-
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.net.Uri;
@@ -11,6 +8,9 @@ import android.util.Log;
 import android.util.Size;
 import android.view.View;
 
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.constraintlayout.widget.ConstraintLayout;
+
 import com.zhihu.matisse.Matisse;
 import com.zhihu.matisse.MimeType;
 import com.zhihu.matisse.engine.impl.GlideEngine;
@@ -18,8 +18,6 @@ import com.zhihu.matisse.engine.impl.GlideEngine;
 import java.util.List;
 
 import cn.vecrates.ffmpeg.databinding.ActivityFfplayerBinding;
-import cn.vecrates.ffmpeg.databinding.ActivityMainBinding;
-import cn.vecrates.ffmpeg.ffmpeg.AudioMixControl;
 import cn.vecrates.ffmpeg.render.DrawerListener;
 import cn.vecrates.ffmpeg.render.VideoDrawer;
 import cn.vecrates.ffmpeg.render.VideoDrawerProxy;
@@ -130,5 +128,28 @@ public class FFPlayerActivity extends AppCompatActivity {
         Log.e(TAG, "onActivityResult: uri=" + uri.toString() + " path=" + path);
         updatePlayer(path);
     }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (isFinishing()) {
+            release();
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        release();
+    }
+
+    private void release() {
+        if (videoDrawer != null) {
+            videoDrawer.stop();
+            videoDrawer.release();
+            videoDrawer = null;
+        }
+    }
+
 
 }

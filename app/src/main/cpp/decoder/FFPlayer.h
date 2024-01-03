@@ -19,6 +19,22 @@ struct JniListenContext {
     jmethodID audioFrameAvailable = nullptr;
 };
 
+struct OutputInfo {
+    int width;
+    int height;
+    AVRational sampleAspectRatio;
+    AVCodecID videoCodecId = AV_CODEC_ID_NONE;
+    AVPixelFormat pixelFormat;
+    int64_t bitRate;
+    AVRational videoTimebase;
+    //
+    AVCodecID audioCodecId = AV_CODEC_ID_NONE;
+    int sampleRate;
+    AVSampleFormat sampleFormat;
+    uint64_t channelLayout;
+    AVRational audioTimebase;
+};
+
 enum class STATE {
     IDLE,
     PREPARED,
@@ -42,6 +58,10 @@ public:
 
     void setJNIListenContext(JNIEnv *env, jobject jObj);
 
+    void setFrameAvailableListener(std::function<void(AVFrame *, AVMediaType)> listener);
+
+    void setDecodingFinishListener(std::function<void()> listener);
+
     /**
      * 进入 IDLE 状态
      */
@@ -51,19 +71,27 @@ public:
 
     void stop();
 
+    int *getVideoSize();
+
+    OutputInfo *getOutputInfo();
+
+    bool isPlaying();
+
+    void setSync(bool sync);
+
+    void setAudioResample(bool resample);
+
+private:
+
     void videoDecodeLoop();
 
     void onVideoFrameAvailable(JNIEnv *env, AVFrame *avFrame);
 
-    void onAudioFrameAvailable(JNIEnv *env, int8_t *pcmBuffer, int bufferSize) const;
+    void onAudioFrameAvailable(JNIEnv *env, AVFrame *avFrame);
 
     void audioDecodeLoop();
 
     void packetReadLoop();
-
-    int *getVideoSize();
-
-private:
 
     void updatePlayerState(STATE state);
 
@@ -99,11 +127,17 @@ private:
 
     STATE mState = STATE::IDLE;
 
-    JniListenContext mJniContext{};
+    JniListenContext mJniListenContext{};
+
+    std::function<void(AVFrame *, AVMediaType)> mFrameAvailableListener = nullptr;
+
+    std::function<void()> mDecodeFinishListener = nullptr;
 
     bool mPreparing = false;
 
-    bool mRunning = false;
+    bool mRunning = false; //标识是否真正读取、解码
+
+    bool mSync = true; //同步音视频速度
 
 };
 

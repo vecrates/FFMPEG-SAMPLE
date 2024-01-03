@@ -32,14 +32,23 @@ public:
 
     void flush() override;
 
-    void setFrameAvailableListener(std::function<void(int8_t *pcmBuffer, int bufferSize)> listener);
+    void seekTo(long us) override;
 
+    AVCodecID getCodecId();
+
+    int getSampleRate();
+
+    AVSampleFormat getSampleFormat();
+
+    uint64_t getChannelLayout();
+
+    void setResample(bool isResample);
 
 private:
 
     int resample(AVFrame *avFrame);
 
-    const int64_t OUT_CHANNEL = AV_CH_LAYOUT_STEREO;
+    const int64_t OUT_CHANNEL_LAYOUT = AV_CH_LAYOUT_STEREO;
 
     const AVSampleFormat OUT_FORMAT = AV_SAMPLE_FMT_S16;
 
@@ -49,9 +58,9 @@ private:
 
     SwrContext *mSwrContext = nullptr;
 
-    int8_t *mAudioBuffer = nullptr;
+    AVFrame *mResampleFrame = nullptr;
 
-    std::function<void(int8_t *pcmBuffer, int bufferSize)> mFrameAvailableListener;
+    bool isResample = true;
 
 };
 

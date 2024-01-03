@@ -28,13 +28,11 @@ VideoDecoder::~VideoDecoder() {
         av_frame_free(&mAvFrame);
         mAvFrame = nullptr;
     }
-    if (mAvCodecContext != nullptr) {
-        avcodec_close(mAvCodecContext);
-        avcodec_free_context(&mAvCodecContext);
-        mAvCodecContext = nullptr;
+    if (mDecodeContext != nullptr) {
+        avcodec_close(mDecodeContext);
+        avcodec_free_context(&mDecodeContext);
+        mDecodeContext = nullptr;
     }
-    mFrameAvailableListener = nullptr;
-    mVideoCodec = nullptr;
 }
 
 bool VideoDecoder::init() {
@@ -45,29 +43,27 @@ bool VideoDecoder::init() {
     }
 
     AVCodecParameters *codecPar = stream->codecpar;
-    mWidth = codecPar->width;
-    mHeight = codecPar->height;
 
-    AVDictionaryEntry *entry
+    /*AVDictionaryEntry *entry
             = av_dict_get(stream->metadata, "rotate", nullptr, AV_DICT_MATCH_CASE);
     if (entry != nullptr) {
         mRotate = std::atoi(entry->value);
-    }
+    }*/
 
     //找到对应的解码器
-    mVideoCodec = avcodec_find_decoder(codecPar->codec_id);
-    if (mVideoCodec == nullptr) {
+    AVCodec *videoCodec = avcodec_find_decoder(codecPar->codec_id);
+    if (videoCodec == nullptr) {
         LOGE("not found codec: %d", codecPar->codec_id);
         return false;
     }
 
     //创建CodecContext
-    mAvCodecContext = avcodec_alloc_context3(mVideoCodec);
+    mDecodeContext = avcodec_alloc_context3(videoCodec);
     //将码流参数复制到CodecContext
-    avcodec_parameters_to_context(mAvCodecContext, codecPar);
+    avcodec_parameters_to_context(mDecodeContext, codecPar);
 
     //打开解码器
-    int ret = avcodec_open2(mAvCodecContext, mVideoCodec, nullptr);
+    int ret = avcodec_open2(mDecodeContext, videoCodec, nullptr);
     if (ret < 0) {
         LOGE("#codec open failed: %d", ret);
         return false;
@@ -80,20 +76,21 @@ bool VideoDecoder::init() {
 }
 
 void VideoDecoder::decode(AVPacket *packet) {
-    int ret = avcodec_send_packet(mAvCodecContext, packet);
+    int ret = avcodec_send_packet(mDecodeContext, packet);
     if (ret != 0 && ret != AVERROR(EAGAIN)) {
         LOGE("#avcodec_send_packet, error=%d", ret);
         return;
     }
 
-    ret = avcodec_receive_frame(mAvCodecContext, mAvFrame);
+    ret = avcodec_receive_frame(mDecodeContext, mAvFrame);
     if (ret != 0) {
         LOGE("#avcodec_receive_frame, error=%d", ret);
         av_frame_unref(mAvFrame);
         return;
     }
 
-    this->mCurrentTimestamp = ptsToUs(mAvFrame->pts);
+    this->mCurrentTimestamp = ptsToUs(mAvFrame->best_effort_timestamp);
+    //this->mCurrentTimestamp = ptsToUs(mAvFrame->pts);
 
     if (mFrameAvailableListener != nullptr) {
         mFrameAvailableListener(mAvFrame);
@@ -107,14 +104,35 @@ void VideoDecoder::flush() {
     BaseDecoder::flush();
 }
 
-void VideoDecoder::setFrameAvailableListener(std::function<void(AVFrame *)> listener) {
-    this->mFrameAvailableListener = std::move(listener);
+AVCodecID VideoDecoder::getCodecId() {
+    return mDecodeContext->codec_id;
 }
 
 int VideoDecoder::getWidth() {
-    return mWidth;
+    return mDecodeContext != nullptr ? mDecodeContext->width : 0;
 }
 
 int VideoDecoder::getHeight() {
-    return mHeight;
+    return mDecodeContext != nullptr ? mDecodeContext->height : 0;
+}
+
+AVRational VideoDecoder::getAspectRatio() {
+    return mDecodeContext != nullptr ? mDecodeContext->sample_aspect_ratio : AVRational{};
+}
+
+AVPixelFormat VideoDecoder::getPixelFormat() {
+    return mDecodeContext != nullptr ? mDecodeContext->pix_fmt : AV_PIX_FMT_NONE;
+}
+
+int64_t VideoDecoder::getBitrate() {
+    return mDecodeContext != nullptr ? mDecodeContext->bit_rate : 0;
+}
+
+void VideoDecoder::seekTo(long us) {
+    if (mDecodeContext == nullptr) {
+        return;
+    }
+
+    av_seek_frame(mAvFormatContext, getStreamIndex(),
+                  usToPts(us), AVSEEK_FLAG_BACKWARD);
 }

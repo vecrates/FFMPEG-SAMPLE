@@ -4,8 +4,6 @@
 
 #include "AudioMixer.h"
 #include <android/log.h>
-#include <cstdlib>
-#include "../util/StringUtil.h"
 
 #define LOGE(...) __android_log_print(ANDROID_LOG_ERROR,"AudioMixer",__VA_ARGS__)
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO,"AudioMixer",__VA_ARGS__)
@@ -332,13 +330,14 @@ bool AudioMixer::init() {
 }
 
 void AudioMixer::reset() {
+    if (mSrcOuts != nullptr) {
+        //只需传第一个，会按next清理清理整个链表
+        avfilter_inout_free(&mSrcOuts);
+        mSrcOuts = nullptr;
+    }
     if (mSinkIn != nullptr) {
         avfilter_inout_free(&mSinkIn);
         mSinkIn = nullptr;
-    }
-    if (mSrcOuts != nullptr) {
-        avfilter_inout_free(&mSrcOuts);
-        mSrcOuts = nullptr;
     }
     for (const auto &it: mAudioContexts) {
         AudioContext *audioContext = it.second;
@@ -467,7 +466,6 @@ bool AudioMixer::writeAudioFrame2Fiwrifo(AudioContext *audioContext) {
         return false;
     }
 
-    avPacket->pts = avPacket->pts + 2646000;
     int ret = av_read_frame(audioContext->avFormatContext, avPacket);
     if (ret != 0) {
         if (ret == AVERROR_EOF) {

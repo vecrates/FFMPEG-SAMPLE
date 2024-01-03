@@ -51,5 +51,3 @@ void Locker::notify() {
     pthread_cond_signal(&mCond);
     pthread_mutex_unlock(&mMutex);
 }
-
-

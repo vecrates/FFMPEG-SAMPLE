@@ -1058,7 +1058,7 @@ typedef struct AVStream {
 
     // Timestamp generation support:
     /**
-     * Timestamp corresponding to the last dts sync point.
+     * Timestamp corresponding to the last dts mSync point.
      *
      * Initialized when AVCodecParserContext.dts_sync_point >= 0 and
      * a DTS is received from the underlying container. Otherwise set to

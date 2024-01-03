@@ -55,6 +55,22 @@ add_library(
 set_target_properties(swscale
         PROPERTIES IMPORTED_LOCATION
         ${SO_LIB}/libswscale.so)
+add_library(
+        x264
+        SHARED
+        IMPORTED
+)
+set_target_properties(x264
+        PROPERTIES IMPORTED_LOCATION
+        ${SO_LIB}/libx264.so)
+add_library(
+        postproc
+        SHARED
+        IMPORTED
+)
+set_target_properties(postproc
+        PROPERTIES IMPORTED_LOCATION
+        ${SO_LIB}/libpostproc.so)
 
 file(GLOB_RECURSE FF_PLAYER_SRC
         ${CPP_DIR}/*.cpp
@@ -71,8 +87,8 @@ target_link_libraries(
 
         log
         android
-        EGL
-        GLESv2
+#        EGL
+#        GLESv2
 
         avcodec
         avfilter
@@ -80,4 +96,6 @@ target_link_libraries(
         avutil
         swresample
         swscale
+        x264
+        postproc
 )
