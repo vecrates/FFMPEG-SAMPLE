@@ -249,7 +249,7 @@ bool AudioMixer::init() {
         AVFilterContext *sinkFilterContext = nullptr;
         int ret = avfilter_graph_create_filter(&sinkFilterContext,
                                                sinkBufferFilter,
-                                               outputName.c_str(),
+                                               outputName.c_str(), //name随意
                                                nullptr,
                                                nullptr,
                                                mFilterGraph);

@@ -4,7 +4,6 @@ import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.net.Uri;
 import android.os.Bundle;
-import android.util.Log;
 import android.util.Size;
 import android.view.View;
 
@@ -125,7 +124,6 @@ public class FFPlayerActivity extends AppCompatActivity {
         }
         Uri uri = uris.get(0);
         String path = UriUtil.queryUriPath(this, uri);
-        Log.e(TAG, "onActivityResult: uri=" + uri.toString() + " path=" + path);
         updatePlayer(path);
     }
 

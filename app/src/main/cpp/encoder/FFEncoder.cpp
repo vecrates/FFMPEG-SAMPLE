@@ -46,6 +46,15 @@ bool FFEncoder::initOutput(const string &file, OutputInfo *outputInfo) {
         return false;
     }
 
+    //AVFMT_NOFILE标志意味着没有AVIOContext, 编解码器将以其他的方式进行I/O操作
+    if (!(mEncodeFormatContext->flags & AVFMT_NOFILE)) {
+        ret = avio_open(&mEncodeFormatContext->pb, file.c_str(), AVIO_FLAG_WRITE);
+        if (ret < 0) {
+            LOGE("#avio_open: %s", av_err2str(ret));
+            return false;
+        }
+    }
+
     if (!initOutputVideoStream(outputInfo)) {
         return false;
     }
@@ -56,15 +65,6 @@ bool FFEncoder::initOutput(const string &file, OutputInfo *outputInfo) {
     }
 
     av_dump_format(mEncodeFormatContext, 0, file.c_str(), 1);
-
-    //AVFMT_NOFILE标志意味着没有AVIOContext, 编解码器将以其他的方式进行I/O操作
-    if (!(mEncodeFormatContext->flags & AVFMT_NOFILE)) {
-        ret = avio_open(&mEncodeFormatContext->pb, file.c_str(), AVIO_FLAG_WRITE);
-        if (ret < 0) {
-            LOGE("#avio_open: %s", av_err2str(ret));
-            return false;
-        }
-    }
 
     ret = avformat_write_header(mEncodeFormatContext, nullptr);
     if (ret < 0) {
@@ -237,6 +237,7 @@ void FFEncoder::onFrameAvailable(AVFrame *avFrame, AVMediaType mediaType) {
             LOGE("#avcodec_send_frame: %s", av_err2str(ret));
             return;
         }
+
         AVPacket *avPacket = av_packet_alloc();
         while (true) {
             ret = avcodec_receive_packet(mAudioEncodeContext, avPacket);

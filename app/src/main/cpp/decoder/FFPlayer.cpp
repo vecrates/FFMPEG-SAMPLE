@@ -50,7 +50,7 @@ bool FFPlayer::prepare(JNIEnv *env, const std::string &file) {
 
     env->GetJavaVM(&mJvm);
 
-    mAvFormatContext = avformat_alloc_context();
+    //mAvFormatContext = avformat_alloc_context();
 
     /*LOGE("=============file format===============");
     av_dump_format(mAvFormatContext, 0, file.c_str(), 0);

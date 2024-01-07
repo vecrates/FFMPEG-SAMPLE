@@ -51,19 +51,19 @@ bool VideoDecoder::init() {
     }*/
 
     //找到对应的解码器
-    AVCodec *videoCodec = avcodec_find_decoder(codecPar->codec_id);
-    if (videoCodec == nullptr) {
+    AVCodec *videoDecoder = avcodec_find_decoder(codecPar->codec_id);
+    if (videoDecoder == nullptr) {
         LOGE("not found codec: %d", codecPar->codec_id);
         return false;
     }
 
     //创建CodecContext
-    mDecodeContext = avcodec_alloc_context3(videoCodec);
+    mDecodeContext = avcodec_alloc_context3(videoDecoder);
     //将码流参数复制到CodecContext
     avcodec_parameters_to_context(mDecodeContext, codecPar);
 
     //打开解码器
-    int ret = avcodec_open2(mDecodeContext, videoCodec, nullptr);
+    int ret = avcodec_open2(mDecodeContext, videoDecoder, nullptr);
     if (ret < 0) {
         LOGE("#codec open failed: %d", ret);
         return false;
@@ -78,6 +78,7 @@ bool VideoDecoder::init() {
 void VideoDecoder::decode(AVPacket *packet) {
     int ret = avcodec_send_packet(mDecodeContext, packet);
     if (ret != 0 && ret != AVERROR(EAGAIN)) {
+        //EAGAIN表示输出数据没用被接收，先receive后再继续输入
         LOGE("#avcodec_send_packet, error=%d", ret);
         return;
     }
@@ -129,7 +130,7 @@ int64_t VideoDecoder::getBitrate() {
 }
 
 void VideoDecoder::seekTo(long us) {
-    if (mDecodeContext == nullptr) {
+    if (mDecodeContext == nullptr || mAvFormatContext == nullptr) {
         return;
     }
 
