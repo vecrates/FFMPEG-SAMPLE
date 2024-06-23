@@ -3,6 +3,7 @@
 //
 
 #include "VideoDecoder.h"
+#include "libavcodec/mediacodec.h"
 #include <android/log.h>
 
 #ifdef __cplusplus
@@ -44,8 +45,7 @@ bool VideoDecoder::init() {
 
     AVCodecParameters *codecPar = stream->codecpar;
 
-    /*AVDictionaryEntry *entry
-            = av_dict_get(stream->metadata, "rotate", nullptr, AV_DICT_MATCH_CASE);
+    /*AVDictionaryEntry *entry = av_dict_get(stream->metadata, "rotate", nullptr, AV_DICT_MATCH_CASE);
     if (entry != nullptr) {
         mRotate = std::atoi(entry->value);
     }*/

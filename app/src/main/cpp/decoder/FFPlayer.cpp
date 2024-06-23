@@ -402,6 +402,8 @@ void FFPlayer::onVideoFrameAvailable(JNIEnv *env, AVFrame *avFrame) {
         unsigned char *u = avFrame->data[1];
         unsigned char *v = avFrame->data[2];
 
+        //avFrame->colorspace; bt.601、bt709...
+
         int frameSize = frameWidth * frameHeight;
 
         jbyteArray yBytes = env->NewByteArray(frameSize);

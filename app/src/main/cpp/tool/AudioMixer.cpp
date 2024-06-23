@@ -215,7 +215,7 @@ bool AudioMixer::init() {
             //引脚
             AVFilterInOut *srcOut = avfilter_inout_alloc();
             srcOut->name = av_strdup(inputName.c_str());
-            srcOut->filter_ctx = srcFilterContext;
+            srcOut->filter_ctx = srcFilterContext; //srcFilter的输出,输出到volume
             srcOut->pad_idx = 0;
             srcOut->next = nullptr;
             if (mSrcOuts == nullptr) {
@@ -290,7 +290,7 @@ bool AudioMixer::init() {
 
         AVFilterInOut *sinkIn = avfilter_inout_alloc();
         sinkIn->name = av_strdup(outputName.c_str());
-        sinkIn->filter_ctx = sinkFilterContext;
+        sinkIn->filter_ctx = sinkFilterContext; //作为sink的输入
         sinkIn->pad_idx = 0;
         sinkIn->next = nullptr;
         mSinkIn = sinkIn;
@@ -406,7 +406,7 @@ AudioPCM *AudioMixer::readFrame() {
     auto *audioPcm = new AudioPCM();
     audioPcm->ptr = outFrame->data[0];
     // nb_samples * channels * bytes_per_sample
-    audioPcm->size = outFrame->nb_samples * 2 * 2;
+    audioPcm->size = outFrame->nb_samples * 2 * 2;  //todo linesize可以？
 
     outFrame->data[0] = nullptr;
     outFrame->buf[0] = nullptr;

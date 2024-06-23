@@ -18,9 +18,7 @@ public class App extends Application {
     }
 
     private void initBackground() {
-        ThreadHelper.runBackground(() -> {
-            MediaManager.init();
-        });
+        ThreadHelper.runBackground(MediaManager::init);
     }
 
     static {

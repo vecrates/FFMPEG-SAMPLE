@@ -3,6 +3,7 @@
 //
 
 #include "FFEncoder.h"
+#include "libavcodec/jni.h"
 
 #define LOGE(...) __android_log_print(ANDROID_LOG_ERROR,"FFEncoder",__VA_ARGS__)
 
@@ -66,6 +67,7 @@ bool FFEncoder::initOutput(const string &file, OutputInfo *outputInfo) {
 
     av_dump_format(mEncodeFormatContext, 0, file.c_str(), 1);
 
+    //如sps、pps等
     ret = avformat_write_header(mEncodeFormatContext, nullptr);
     if (ret < 0) {
         LOGE("#avformat_write_header: %s", av_err2str(ret));
