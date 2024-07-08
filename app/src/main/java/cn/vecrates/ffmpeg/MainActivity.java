@@ -5,7 +5,6 @@ import android.os.Bundle;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import cn.vecrates.ffmpeg.coord.CoordinatorActivity;
 import cn.vecrates.ffmpeg.databinding.ActivityMainBinding;
 import cn.vecrates.ffmpeg.render.VideoDrawer;
 
@@ -39,9 +38,8 @@ public class MainActivity extends AppCompatActivity {
         });
 
         binding.tvTranscode.setOnClickListener(v -> {
-            /*Intent intent = new Intent(this, TranscodeActivity.class);
-            startActivity(intent);*/
-            startActivity(new Intent(this, CoordinatorActivity.class));
+            Intent intent = new Intent(this, TranscodeActivity.class);
+            startActivity(intent);
         });
 
     }
