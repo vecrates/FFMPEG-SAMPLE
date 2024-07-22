@@ -10,6 +10,16 @@
 #include "util/StringUtil.h"
 #include "encoder/FFEncoder.h"
 
+#ifdef __cplusplus
+extern "C" { //ffmpeg用c语言的方式编译
+#endif
+
+#include "ffmpeg.h"
+
+#ifdef __cplusplus
+}
+#endif
+
 
 /*************FFPlayer************/
 
@@ -191,4 +201,26 @@ Java_cn_vecrates_ffmpeg_ffmpeg_FFEncoder_nativeReset(JNIEnv *env, jobject instan
     ffEncoder->reset();
 }
 
-/*************FFEncoder************/
+
+/*************FFmpeg cmd************/
+
+extern "C"
+JNIEXPORT jint JNICALL
+Java_cn_vecrates_ffmpeg_ffmpeg_FFmpegCmd_exe(JNIEnv *env, jclass clazz,
+                                             jobjectArray jCmds) {
+    int length = env->GetArrayLength(jCmds);
+    const char **cmds = new const char *[length];
+    for (int i = 0; i < length; i++) {
+        auto item = (jstring) env->GetObjectArrayElement(jCmds, i);
+        const char *cmdItem = env->GetStringUTFChars(item, 0);
+        cmds[i] = cmdItem;
+    }
+    int result = exe_cmd(length, cmds);
+    for (int i = 0; i < length; i++) {
+        auto item = (jstring) env->GetObjectArrayElement(jCmds, i);
+        env->ReleaseStringUTFChars(item, cmds[i]);
+    }
+    return result;
+}
+
+/*************FFmpeg cmd end************/

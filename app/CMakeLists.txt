@@ -6,7 +6,8 @@ set(CPP_DIR ${CMAKE_SOURCE_DIR}/src/main/cpp)
 set(SO_LIB ${CMAKE_SOURCE_DIR}/src/main/jniLibs/${ANDROID_ABI})
 
 #FFMPEG-4.4
-include_directories(${CPP_DIR}/include)
+include_directories(${CPP_DIR}/ffmpeg/include)
+include_directories(${CPP_DIR}/ffmpeg/)
 add_library(
         avcodec
         SHARED
@@ -87,8 +88,8 @@ target_link_libraries(
 
         log
         android
-#        EGL
-#        GLESv2
+        #        EGL
+        #        GLESv2
 
         avcodec
         avfilter

@@ -40,4 +40,16 @@
         android:textColor="#FFFFFF"
         android:textSize="16sp" />
 
+    <TextView
+        android:id="@+id/tv_cmd"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginVertical="5dp"
+        android:background="#666666"
+        android:padding="10dp"
+        android:text="命令行"
+        android:textColor="#FFFFFF"
+        android:textSize="16sp" />
+
+
 </LinearLayout>

@@ -8,8 +8,8 @@
 extern "C" {
 #endif
 
-#include "../include/libavcodec/avcodec.h"
-#include "../include/libavutil/avutil.h"
+#include "libavcodec/avcodec.h"
+#include "libavutil/avutil.h"
 
 #ifdef __cplusplus
 };

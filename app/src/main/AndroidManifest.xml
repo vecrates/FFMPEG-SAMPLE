@@ -17,6 +17,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.FFMPEGSample">
         <activity
+            android:name=".CmdActivity"
+            android:exported="false" />
+        <activity
             android:name=".TranscodeActivity"
             android:exported="false" />
         <activity

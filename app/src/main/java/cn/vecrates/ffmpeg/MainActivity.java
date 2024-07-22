@@ -6,15 +6,12 @@ import android.os.Bundle;
 import androidx.appcompat.app.AppCompatActivity;
 
 import cn.vecrates.ffmpeg.databinding.ActivityMainBinding;
-import cn.vecrates.ffmpeg.render.VideoDrawer;
 
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MainActivity";
 
     private ActivityMainBinding binding;
-
-    private VideoDrawer videoDrawer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,6 +39,10 @@ public class MainActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
+        binding.tvCmd.setOnClickListener(v -> {
+            Intent intent = new Intent(this, CmdActivity.class);
+            startActivity(intent);
+        });
     }
 
 }

@@ -3,7 +3,7 @@
 //
 
 #include "FFEncoder.h"
-#include "libavcodec/jni.h"
+#include "include/libavcodec/jni.h"
 
 #define LOGE(...) __android_log_print(ANDROID_LOG_ERROR,"FFEncoder",__VA_ARGS__)
 
