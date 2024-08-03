@@ -206,8 +206,10 @@ Java_cn_vecrates_ffmpeg_ffmpeg_FFEncoder_nativeReset(JNIEnv *env, jobject instan
 
 extern "C"
 JNIEXPORT jint JNICALL
-Java_cn_vecrates_ffmpeg_ffmpeg_FFmpegCmd_exe(JNIEnv *env, jclass clazz,
-                                             jobjectArray jCmds) {
+Java_cn_vecrates_ffmpeg_ffmpeg_FFmpegCmd_nativeExe(JNIEnv *env, jclass clazz,
+                                                   jobjectArray jCmds,
+                                                   jobject jCallback) {
+    setCmdCallback(env, jCallback);
     int length = env->GetArrayLength(jCmds);
     const char **cmds = new const char *[length];
     for (int i = 0; i < length; i++) {
@@ -221,6 +223,12 @@ Java_cn_vecrates_ffmpeg_ffmpeg_FFmpegCmd_exe(JNIEnv *env, jclass clazz,
         env->ReleaseStringUTFChars(item, cmds[i]);
     }
     return result;
+}
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_cn_vecrates_ffmpeg_ffmpeg_FFmpegCmd_nativeRelease(JNIEnv *env, jclass clazz) {
+    setCmdCallback(env, nullptr);
 }
 
 /*************FFmpeg cmd end************/

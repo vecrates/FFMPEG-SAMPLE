@@ -16,8 +16,8 @@
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="16dp"
         android:text="cmd..."
-        android:textColor="#f00"
-        android:textSize="16sp" />
+        android:textColor="#03A9F4"
+        android:textSize="14sp" />
 
 
 </FrameLayout>

@@ -170,6 +170,10 @@ int nb_output_files = 0;
 FilterGraph **filtergraphs;
 int nb_filtergraphs;
 
+jobject cmdCallbackObj = NULL;
+jmethodID cmdCallbackMethod = NULL;
+JNIEnv *jniEnv = NULL;
+
 #if HAVE_TERMIOS_H
 
 /* init terminal so that we can grab keys */
@@ -1745,7 +1749,6 @@ static void print_report(int is_last_report, int64_t timer_start, int64_t cur_ti
 
     t = (cur_time - timer_start) / 1000000.0;
 
-
     oc = output_files[0]->ctx;
 
     total_size = avio_size(oc->pb);
@@ -1921,6 +1924,19 @@ static void print_report(int is_last_report, int64_t timer_start, int64_t cur_ti
 
     if (is_last_report)
         print_final_stats(total_size);
+
+    AVRational timeBase = ost->st->time_base;
+    long durationUs = ost->st->duration * av_q2d(timeBase) * 1000000L;
+
+    LOGI("%ld %ld %f", durationUs, pts, (pts * 1.f) / durationUs);
+
+    JNIEnv *env = jniEnv;
+    jobject callback = cmdCallbackObj;
+    jmethodID callbackMethod = cmdCallbackMethod;
+    if (env != NULL && callback != NULL && callbackMethod != NULL) {
+        (*env)->CallVoidMethod(env, callback, callbackMethod, pts, durationUs);
+    }
+
 }
 
 static void ifilter_parameters_from_codecpar(InputFilter *ifilter, AVCodecParameters *par) {
@@ -4838,6 +4854,7 @@ static int transcode(void) {
         /* dump report by using the output first video and audio streams */
         print_report(0, timer_start, cur_time);
     }
+
 #if HAVE_THREADS
     free_input_threads();
 #endif
@@ -4997,6 +5014,29 @@ static void log_callback_null(void *ptr, int level, const char *fmt, va_list vl)
     }
 
 }
+
+
+void setCmdCallback(JNIEnv *env, jobject callback) {
+    if (callback == NULL) {
+        cmdCallbackObj = NULL;
+        cmdCallbackMethod = NULL;
+        jniEnv = NULL;
+        return;
+    }
+
+    //env调用c语言写法
+    cmdCallbackObj = (*env)->NewGlobalRef(env, callback);
+
+    jclass clazz = (*env)->GetObjectClass(env, callback);
+
+    cmdCallbackMethod = (*env)->GetMethodID(env, clazz,
+                                            "onProgress",
+                                            "(JJ)V");
+
+    jniEnv = env;
+
+}
+
 
 int exe_cmd(int argc, const char **argv) {
     int i, ret;

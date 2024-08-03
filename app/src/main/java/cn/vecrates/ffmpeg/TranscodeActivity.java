@@ -26,8 +26,8 @@ public class TranscodeActivity extends AppCompatActivity {
         handler = new Handler(thread.getLooper());
 
         handler.post((() -> {
-            String src = MediaManager.getMediaDir() + "/1.mp4";
-            String dest = MediaManager.getMediaDir() + "/1_transcode.mp4";
+            String src = MediaManager.getMediaDir() + "/test.mp4";
+            String dest = MediaManager.getMediaDir() + "/test_transcode.mp4";
             File file = new File(dest);
             if (file.exists()) {
                 file.delete();

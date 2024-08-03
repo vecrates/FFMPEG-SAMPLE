@@ -548,7 +548,7 @@ void FFPlayer::updatePlayerState(STATE state) {
 
 //region listener
 
-void FFPlayer::setJNIListenContext(JNIEnv *env, jobject jObj) {
+void FFPlayer:: setJNIListenContext(JNIEnv *env, jobject jObj) {
     if (jObj == nullptr) {
         resetJniListenContext(env);
         return;
