@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/cl_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#999"
+    android:background="#75CC9A"
     android:gravity="center"
     android:orientation="vertical">
 
@@ -12,7 +11,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginVertical="5dp"
-        android:background="#666666"
+        android:background="#E06A0A"
         android:padding="10dp"
         android:text="视频播放"
         android:textColor="#FFFFFF"
@@ -23,7 +22,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginVertical="5dp"
-        android:background="#666666"
+        android:background="#E06A0A"
         android:padding="10dp"
         android:text="混音"
         android:textColor="#FFFFFF"
@@ -34,7 +33,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginVertical="5dp"
-        android:background="#666666"
+        android:background="#E06A0A"
         android:padding="10dp"
         android:text="转码"
         android:textColor="#FFFFFF"
@@ -45,9 +44,20 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginVertical="5dp"
-        android:background="#666666"
+        android:background="#E06A0A"
         android:padding="10dp"
         android:text="命令行"
+        android:textColor="#FFFFFF"
+        android:textSize="16sp" />
+
+    <TextView
+        android:id="@+id/tv_extract_frames"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginVertical="5dp"
+        android:background="#E06A0A"
+        android:padding="10dp"
+        android:text="抽帧"
         android:textColor="#FFFFFF"
         android:textSize="16sp" />
 

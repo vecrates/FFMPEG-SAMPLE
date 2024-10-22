@@ -10,8 +10,8 @@ android {
 
     defaultConfig {
         applicationId "cn.vecrates.ffmpeg_sample"
-        minSdkVersion 21
-        targetSdkVersion 30
+        minSdkVersion 23
+        targetSdkVersion 33
         versionCode 1
         versionName "1.0"
 
@@ -90,11 +90,12 @@ dependencies {
 
     implementation 'com.github.bumptech.glide:glide:4.9.0'
     annotationProcessor 'com.github.bumptech.glide:compiler:4.9.0'
-    implementation 'com.zhihu.android:matisse:0.5.3-beta3'
 
     implementation("com.squareup.okhttp3:okhttp:4.4.0")
 
     implementation("androidx.media3:media3-exoplayer:1.1.1")
     implementation("androidx.media3:media3-ui:1.1.1")
+
+    implementation project(":matisse")
 
 }

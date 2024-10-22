@@ -1,6 +1,8 @@
 package cn.vecrates.ffmpeg;
 
+import android.Manifest;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -21,6 +23,7 @@ public class MainActivity extends AppCompatActivity {
 
         init();
 
+        requestPermissions();
     }
 
     private void init() {
@@ -43,6 +46,19 @@ public class MainActivity extends AppCompatActivity {
             Intent intent = new Intent(this, CmdActivity.class);
             startActivity(intent);
         });
+
+        binding.tvExtractFrames.setOnClickListener(v -> {
+            Intent intent = new Intent(this, ExtractFramesActivity.class);
+            startActivity(intent);
+        });
+    }
+
+    private void requestPermissions() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            requestPermissions(new String[]{Manifest.permission.READ_MEDIA_IMAGES, Manifest.permission.READ_MEDIA_VIDEO}, 0);
+        } else {
+            requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 0);
+        }
     }
 
 }

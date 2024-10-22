@@ -1928,7 +1928,8 @@ static void print_report(int is_last_report, int64_t timer_start, int64_t cur_ti
     AVRational timeBase = ost->st->time_base;
     long durationUs = ost->st->duration * av_q2d(timeBase) * 1000000L;
 
-    LOGI("%ld %ld %f", durationUs, pts, (pts * 1.f) / durationUs);
+    LOGI("duration=%ld cur=%ld percent=%f finished=%d", durationUs, pts,
+         (pts * 1.f) / durationUs, ost->finished);
 
     JNIEnv *env = jniEnv;
     jobject callback = cmdCallbackObj;
